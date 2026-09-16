@@ -1,0 +1,33 @@
+# Dependências
+node_modules/
+
+# Sessões do WhatsApp (não versionar credenciais)
+.sessions/
+.sessions-backup/
+
+# Banco de dados local (dados de clientes e agenda)
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Segredos (nunca versionar)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+
+# Configuração local do editor/OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporários
+tmp/
+*.tmp

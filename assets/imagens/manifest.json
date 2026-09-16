@@ -1,0 +1,14 @@
+{
+  "logo_igor": {
+    "arquivo": "logo.png",
+    "descricao": "Logo do Igor Dev"
+  },
+  "catalogo_servicos": {
+    "arquivo": "catalogo-servicos.png",
+    "descricao": "Tabela visual com serviços e preços"
+  },
+  "boasvindas_gif": {
+    "arquivo": "boasvindas.gif",
+    "descricao": "GIF de boas-vindas animado"
+  }
+}
