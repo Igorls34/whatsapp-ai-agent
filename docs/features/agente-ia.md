@@ -45,6 +45,7 @@ O `opencode serve` expõe a session API (`POST /session/:id/message`), **sem** s
 | `salvar_resumo_cliente` | `clientMemoryService.js` | Grava memória do cliente (ver [memória](memoria.md)) |
 | `notificar_emergencia` | `emergencyService.js` | Avisa o Igor de urgência (ver [notificações](notificacoes.md)) |
 | `enviar_imagem` | `imageService.js` | Envia imagem/GIF (ver [imagens](imagens.md)) |
+| `bloquear_cliente` | `toolExecutor.js` | Encerra o chat por abuso: permanente no WhatsApp, 1h no web (ver [backpressure](backpressure.md)) |
 
 ## Guardrails e persona
 

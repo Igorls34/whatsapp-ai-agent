@@ -56,6 +56,7 @@ Implementadas **em cima do núcleo**, cada uma com página própria:
 | 🖼️ **Imagens / GIFs** | Envia logo, catálogo visual e GIF de boas-vindas via `manifest.json` | [imagens.md](docs/features/imagens.md) |
 | 🛠️ **Painel admin (CRUD)** | Página web + API REST para gerenciar os serviços sem SQL | [painel-admin.md](docs/features/painel-admin.md) |
 | 💬 **Chat Web** | Página de chat para conversar com o **mesmo agente** no navegador | [chat-web.md](docs/features/chat-web.md) |
+| 🛡️ **Controle de gargalos & bloqueio** | Semáforo/limites de LLM, timeout, envio espaçado, fila de avisos à prova de travamento e bloqueio de clientes abusivos | [backpressure.md](docs/features/backpressure.md) |
 
 > [!NOTE]
 > Índice completo com núcleo **e** features: **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -197,6 +198,7 @@ SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Sch
 - **`clientes`** — telefone (pk), nome, resumo (memória de longo prazo), timestamps.
 - **`agenda`** — slots com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Slots livres passados são limpos automaticamente.
 - **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria** (ex: Design Gráfico, Engenharia, Montagem e Hardware…). O campo `preco` (se existir) **não** é lido nem repassado — valores só saem com o Igor. Edite sem SQL via `npm run admin`.
+- **`avisos_pendentes`** — fila de notificações de processos sem WhatsApp (web/painel) → entregues pelo bot (ver [backpressure](docs/features/backpressure.md)).
 
 ---
 
@@ -222,6 +224,9 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 | `KEEP_MESSAGES` / `SUMMARIZE_EVERY` | `12` / `5` | Histórico volátil e frequência do resumo persistente. |
 | `ADMIN_PORT` / `ADMIN_TOKEN` | `3000` / vazio | Porta e token do painel admin. |
 | `WEB_HOST` / `WEB_PORT` | `127.0.0.1` / `4000` | Onde fica o chat web (página + API). |
+| `LLM_MAX_CONCURRENT` / `LLM_TIMEOUT_MS` | `3` / `60000` | Turnos de IA em paralelo e teto por turno. |
+| `ENVIO_MIN_GAP_MS` | `700` | Intervalo mínimo entre envios no WhatsApp (ms). |
+| `WEB_MAX_CONCURRENT` / `WEB_TIMEOUT_MS` | `3` / `60000` | Teto de respostas simultâneas e protocolo de timeout no chat web. |
 
 ---
 
@@ -274,6 +279,7 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 | 🖼️ [`docs/features/imagens.md`](docs/features/imagens.md) | Imagens/GIFs |
 | 🛠️ [`docs/features/painel-admin.md`](docs/features/painel-admin.md) | Painel CRUD de serviços |
 | 💬 [`docs/features/chat-web.md`](docs/features/chat-web.md) | Chat web (página + API para o portfólio) |
+| 🛡️ [`docs/features/backpressure.md`](docs/features/backpressure.md) | Controle de gargalos (limites de concorrência/timeout) + bloqueio por abuso |
 | 🧙 [`docs/OPERACAO.md`](docs/OPERACAO.md) | Guia do operador (subir/parar/logs/troubleshooting) |
 | 🎚️ [`docs/AJUSTES.md`](docs/AJUSTES.md) | Ajustes rápidos sem código |
 | 📧 [`docs/SMTP.md`](docs/SMTP.md) | Senha de app do Gmail |

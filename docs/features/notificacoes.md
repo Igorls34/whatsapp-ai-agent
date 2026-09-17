@@ -36,11 +36,20 @@ Quando o cliente está irritado, com urgência ou pedindo explicitamente falar c
 - Se `EMERGENCY_NUMBER` estiver preenchido → envia via WhatsApp para esse número;
 - Senão → registra no log com prefixo `[EMERGENCIA]`.
 
+## 3. Fila de avisos (`avisos_pendentes`)
+
+Processos **sem socket do WhatsApp** (chat web, painel) não conseguem enviar notificação direto — eles **gravam na fila** `avisos_pendentes` (`dbEnqueue`) e o bot entrega depois:
+
+- O bot verifica a fila **a cada 30s** — cada aviso é tratado individualmente (um erro não bloqueia os demais).
+- Após **5 tentativas** sem sucesso o aviso é descartado (com log).
+- Detalhes completos em [backpressure.md](backpressure.md).
+
 ## Arquivos
 
 - `src/services/notificationService.js` — WhatsApp + email (nodemailer)
 - `src/services/emergencyService.js` — `notificar_emergencia`
 - `src/services/toolExecutor.js` — deflagra `notificarAgendamento` pós-agendamento
+- `src/index.js` — `drenarAvisosPendentes` (entrega a fila a cada 30s)
 - Config em `src/config.js` → `config.notificacoes`
 
 ## Pontos de atenção

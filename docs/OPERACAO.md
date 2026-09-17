@@ -41,7 +41,7 @@ npm start
 
 ## Ver os logs
 
-- **Terminal do bot** — mensagens recebidas/enviadas (`[msg]...`), boas-vindas (`[welcome]...`), agendamentos (`[notif]...`), erros de LLM (`[llm]...`).
+- **Terminal do bot** — mensagens recebidas/enviadas (`[msg]...`), boas-vindas (`[welcome]...`), agendamentos (`[notif]...`), erros de LLM (`[llm]...`), segurança/bloqueios (`[seguranca]...`) e entrega de avisos pendentes (`[notif] aviso entregue...`).
 - Rodando em segundo plano, os logs são gravados na pasta **`logs/`** (`bot.log`, `admin.log`, `opencode-serve.log`).
 - Para rodar redirecionando para um arquivo:
 
@@ -58,6 +58,7 @@ npm start > logs\bot.log 2>&1
 | QR pedido de novo | sessão apagada/corrompida em `.sessions/` | escaneie de novo (back-up da sessão em `.sessions-backup/`) |
 | Email de agendamento não chega | SMTP inválido/senha de app | veja `docs/SMTP.md` |
 | Cliente fala de horário indisponível | agenda lotada | confira `agenda` no banco (ver `docs/AJUSTES.md`) |
+| Cliente abusivo sumiu do atendimento | foi bloqueado (permanente no WhatsApp, 1h no web) | log `[seguranca] chat fechado`; para desbloquear, limpe `chat_fechado` em `clientes` |
 
 ## Onde os dados ficam
 

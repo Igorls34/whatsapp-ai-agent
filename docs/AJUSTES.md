@@ -10,7 +10,7 @@ A forma mais fácil é o **painel web** (CRUD): rode `npm run admin` e abra `htt
 
 Alternativamente, direto no banco:
 
-Os serviços ficam na tabela `servicos` do SQLite (`data/agent.db`). Campos: `nome`, `descricao`, `ativo`, `ordem` (a coluna `preco`, se existir, não é usada pelo bot).
+Os serviços ficam na tabela `servicos` do SQLite (`data/agent.db`). Campos: `nome`, `descricao`, `categoria`, `preco`, `ativo`, `ordem`.
 
 É a **única fonte da verdade** do LLM: ele só apresenta o que estiver cadastrado e `ativo = 1`.
 
@@ -24,9 +24,10 @@ node -e "const db=require('better-sqlite3')('data/agent.db'); console.log(db.pre
 Ou, de forma mais amigável, use uma ferramenta de SQLite (ex.: [DB Browser for SQLite](https://sqlitebrowser.org/)) abrindo `data/agent.db` e editando a tabela `servicos`.
 
 Regras:
-- **Valores nunca são falados pelo bot** — por regra de negócio, o bot não informa preços de nenhum serviço. Se o cliente perguntar quanto custa, o bot remete ao Igor e sugere agendar uma reunião para ele passar o orçamento. Mantenha a coluna `preco` do banco sem dados (ou preencha, mas o bot não lê).
+- **Valores nunca são falados pelo bot** — por regra de negócio, o bot não informa preços de nenhum serviço. Se o cliente perguntar quanto custa, o bot remete ao Igor e sugere agendar uma reunião para ele passar o orçamento. Mesmo que a coluna `preco` esteja preenchida (referência interna do Igor), o bot não a lê nem a repassa.
 - `ativo = 0` esconde o serviço sem apagar (útil em promoções/lançamentos).
 - `ordem` controla a exibição (menor primeiro).
+- **Dica:** os serviços podem ser gerenciados sem SQL pelo painel web (`npm run admin`) — inclui lista com toggle de ativo. Detalhes: [painel-admin.md](features/painel-admin.md).
 
 ## Agenda e horários de trabalho
 

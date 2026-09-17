@@ -40,15 +40,16 @@ npm run web
 
 - **Ferramentas que dependem do WhatsApp** (`enviar_imagem`, notificações por WhatsApp, emergência via WhatsApp) respondem com aviso amigável ao modelo — o chat vira texto puro.
 - **Agendamentos**: funcionam normalmente (o Igor é notificado por email/WhatsApp, conforme config).
-- **Rate limit** simples por sessão: ~12 mensagens/minuto (evita abuso em site público).
+- **Rate limit** por sessão: ~12 mensagens/minuto (`429`) — evita abuso em site público.
+- **Bloqueio por abuso**: comportamento abusivo chama a ferramenta `bloquear_cliente` e o chat fica **indisponível por 1h** (retorno `indisponivel: true`). Em tudo isso, os **gargalos** também valem aqui (ver [backpressure](backpressure.md)).
 
 ## Endpoints
 
 | Método | Rota | Descrição |
 |---|---|---|
 | `GET` | `/` | Página do chat (HTML único, zero dependências) |
-| `GET` | `/api/start?sessionId=` | Retorna `{ sessionId }` e registra o visitante |
-| `POST` | `/api/chat` | Envia `{ sessionId, message }` → `{ reply, partes }` |
+| `GET` | `/api/start?sessionId=` | Retorna `{ sessionId, atendente }` e registra o visitante; `indisponivel: true` se a sessão estiver bloqueada (1h) |
+| `POST` | `/api/chat` | Envia `{ sessionId, message }` → `{ ok, reply, partes }`; `429` se acima do limite/minuto; `503` se em excesso (`WEB_MAX_CONCURRENT`) ou timeout (`WEB_TIMEOUT_MS`) |
 
 ## Arquivos
 
@@ -65,4 +66,4 @@ O API responde com **CORS aberto** (`*`), então dá para o chat ser consumido p
 2. **Widget próprio**: o seu site chama `POST /api/chat` com `{sessionId, message}` e desenha as bolhas do seu jeito.
 
 > [!TIP]
-> Expondo publicamente (`WEB_HOST=0.0.0.0`), proteja atrás de HTTPS (nginx/Cloudflare). O bot continua podendo ser atingido por qualquer pessoa — o rate limit evita abuso, mas a persona e as regras (`VALORES NUNCA`) seguem valendo aqui também.
+> Expondo publicamente (`WEB_HOST=0.0.0.0`), proteja atrás de HTTPS (nginx/Cloudflare). O bot continua podendo ser atingido por qualquer pessoa — o rate limit só limita o ritmo; a persona, as regras (`VALORES NUNCA`) e o bloqueio por abuso (`bloquear_cliente`) seguem valendo aqui também.

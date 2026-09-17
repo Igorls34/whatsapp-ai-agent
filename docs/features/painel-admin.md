@@ -16,6 +16,9 @@ npm run admin        # sobe o servidor HTTP local
 - A **categoria** organiza o catálogo para o bot apresentar de forma agrupada (ex: "Design Gráfico", "Engenharia"…). Campos sem categoria caem em "Outros serviços".
 - **Excluir**: pede a confirmação digitando o nome do serviço.
 - Banner informativo reforça: o bot **nunca informa valores** ao cliente.
+- **Navegação SPA** por rotas (`#/servicos`, `#/agenda`) no cabeçalho: muda de aba sem recarregar, com histórico/voltar do navegador funcionando. A **Agenda** é carregada sob demanda — só quando a rota abre pela primeira vez.
+- A **Agenda** é exibida **agrupada por dia** com cabeçalho (`Hoje — Qui, 17/09`, `Amanhã …`), coluna de **Hora** separada e contagem de registros por dia.
+- **Tema visual** segue o portfólio do Igor (fundo escuro `#050505`, cards `#0a0a0a`, gradiente azul→violeta→rosa, fonte Inter).
 
 ## API (REST)
 
@@ -29,6 +32,10 @@ O painel é servido por uma API REST mínima, escrita só com o módulo `http` d
 | `POST` | `/api/servicos` | Cria `{ nome, descricao, categoria, ativo, ordem }` |
 | `PUT` | `/api/servicos/:id` | Atualiza o serviço |
 | `DELETE` | `/api/servicos/:id` | Exclui o serviço |
+| `GET` | `/api/agendamentos` | Lista os agendamentos (filtro `?status=` opcional) |
+| `POST` | `/api/agendamentos` | Cria um agendamento/horário |
+| `PUT` | `/api/agendamentos/:id` | Atualiza um agendamento |
+| `DELETE` | `/api/agendamentos/:id` | Exclui um agendamento |
 
 Exemplos:
 
@@ -61,4 +68,4 @@ O catálogo é a **fonte da verdade** que o LLM usa para apresentar serviços (r
 
 ## Pontos de atenção
 
-- **Valores:** o campo `preco` da tabela **não é exibido nem editado** no painel, e o bot nunca o repassa ao cliente (decisão de negócio: orçamento só com o Igor).
+- **Valores:** o campo `preco` da tabela **não é exibido nem editado** no painel, e o bot nunca o repassa ao cliente (decisão de negócio: orçamento só com o Igor). Serviços cadastrados podem ter `preco` preenchido no banco (referência interna), mas ele não aparece nem é enviado.
