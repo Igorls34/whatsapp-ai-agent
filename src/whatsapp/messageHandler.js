@@ -50,6 +50,18 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     const telefone = telefoneRecebido || remoteJid.replace('@s.whatsapp.net', '');
     const socket = getSocket();
 
+    // Segurança: cliente com chat fechado (abuso) não é atendido. Bloqueio
+    // temporário expirado libera automaticamente; permanente ignora tudo.
+    try {
+      const estado = repos.estadoChat(telefone);
+      if (estado.bloqueado) {
+        console.log(`[seguranca] mensagem ignorada de ${telefone} (${estado.temporario ? 'bloqueio temporario' : 'chat fechado'}): ${estado.motivo}`);
+        return;
+      }
+    } catch (err) {
+      console.error('[seguranca] falha ao checar bloqueio:', err.message);
+    }
+
     const midia = type !== 'text';
     console.log(`[msg] de ${telefone}${pushName ? ` (${pushName})` : ''}: ${midia ? `[${type}]` : text.slice(0, 120)}`);
 

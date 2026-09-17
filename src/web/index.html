@@ -118,6 +118,16 @@
     .bar button:hover { background: var(--accent-dark); }
     .bar button:disabled { opacity: .5; cursor: default; }
 
+    .blocked-banner {
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 600;
+      background: #fff7ed;
+      color: #9a3412;
+      border-top: 1px solid #fed7aa;
+    }
+
     footer {
       padding: 8px;
       text-align: center;
@@ -144,6 +154,8 @@
       <button id="send" title="Enviar">➤</button>
     </div>
 
+    <div class="blocked-banner" id="blocked" hidden>🔒 Chat indisponível no momento. Tente novamente mais tarde.</div>
+
     <footer>💬 Este é o outro lado do bot que atende no WhatsApp do Igor Dev.</footer>
   </div>
 
@@ -152,8 +164,17 @@
     const inp = document.getElementById('inp');
     const send = document.getElementById('send');
     const sttxt = document.getElementById('sttxt');
+    const blockedEl = document.getElementById('blocked');
 
     let sessionId = localStorage.getItem('web_chat_session');
+
+    function setIndisponivel() {
+      blockedEl.hidden = false;
+      inp.disabled = true;
+      send.disabled = true;
+      inp.placeholder = 'Chat indisponível';
+      sttxt.textContent = 'indisponível';
+    }
 
     function addMsg(texto, quem = 'bot') {
       const el = document.createElement('div');
@@ -179,6 +200,11 @@
         if (!res.ok) throw new Error(data.erro);
         sessionId = data.sessionId;
         localStorage.setItem('web_chat_session', sessionId);
+        if (data.indisponivel) {
+          setIndisponivel();
+          addMsg('Este chat ficou indisponível no momento. Tente novamente mais tarde. 🔒', 'bot');
+          return;
+        }
         sttxt.textContent = 'online';
       } catch (_) {
         sttxt.textContent = 'offline';
@@ -204,6 +230,11 @@
         const data = await res.json();
         typing.remove();
         if (!res.ok) throw new Error(data.erro || 'Falha na resposta');
+        if (data.indisponivel) {
+          setIndisponivel();
+          addMsg('Este chat ficou indisponível no momento. Tente novamente mais tarde. 🔒', 'bot');
+          return;
+        }
         addPartes(data.reply);
       } catch (err) {
         typing.remove();

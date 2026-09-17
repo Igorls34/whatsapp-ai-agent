@@ -1,4 +1,4 @@
-import { systemPrompt } from '../prompt/systemPrompt.js';
+import { buildSystemPrompt } from '../prompt/systemPrompt.js';
 import {
   withToolProtocol,
   parseToolEnvelope,
@@ -45,8 +45,9 @@ export function buildImageCatalog(imagens = []) {
   return `## Imagens disponíveis para enviar ao cliente\n${linhas}`;
 }
 
-export function createAgent({ adapter, executor }) {
-  const baseSystem = withToolProtocol(systemPrompt);
+// canal: 'whatsapp' (padrão) | 'web' — ajusta o system prompt ao canal de atendimento.
+export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
+  const baseSystem = withToolProtocol(buildSystemPrompt({ canal }));
 
   // Aceita tanto executor.execute(...) quanto uma função direta.
   const runTool =

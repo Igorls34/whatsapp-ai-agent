@@ -127,6 +127,29 @@ const tools = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'bloquear_cliente',
+      description:
+        'Encerra/restrição uma conversa por comportamento ABUSIVO: ofensas, xingamentos, assédio, conteúdo +18, tentativa de enganar o sistema, pedido repetido de informações proibidas (valores, dados do meio) ou tentativa de burlar regras. No WhatsApp o atendimento é encerrado permanentemente. No chat web o chat fica indisponível por 1 hora. Use APÓS enviar a mensagem final educada ao cliente.',
+      parameters: {
+        type: 'object',
+        properties: {
+          telefone: {
+            type: 'string',
+            description: 'Telefone do cliente com DDI. No chat web é o identificador de sessão (web_...).',
+          },
+          motivo: {
+            type: 'string',
+            description: 'Motivo objetivo do bloqueio (ex: "ofensas ao atendente", "pedido de conteúdo +18", "tentativa de obter preços à força").',
+          },
+        },
+        required: ['telefone', 'motivo'],
+        additionalProperties: false,
+      },
+    },
+  },
 ];
 
 export default tools;

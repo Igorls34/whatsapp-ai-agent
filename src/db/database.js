@@ -45,6 +45,20 @@ function migrarCategoriaServicos(db) {
   }
 }
 
+// Colunas de controle de chat (bloqueio por comportamento abusivo) em clientes.
+function migrarBloqueioChat(db) {
+  const colunas = db.prepare('PRAGMA table_info(clientes)').all();
+  const add = (coluna, tipo) => {
+    if (!colunas.some((c) => c.name === coluna)) {
+      db.exec(`ALTER TABLE clientes ADD COLUMN ${coluna} ${tipo}`);
+    }
+  };
+  add('chat_fechado', 'INTEGER NOT NULL DEFAULT 0');
+  add('motivo_bloqueio', 'TEXT');
+  add('bloqueado_em', 'TEXT');
+  add('desbloqueio_em', 'TEXT');
+}
+
 export function openDatabase(dbPath = config.dbPath) {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -52,5 +66,6 @@ export function openDatabase(dbPath = config.dbPath) {
   db.pragma('foreign_keys = ON');
   db.exec(SCHEMA);
   migrarCategoriaServicos(db);
+  migrarBloqueioChat(db);
   return db;
 }

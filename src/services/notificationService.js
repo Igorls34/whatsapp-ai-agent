@@ -1,8 +1,8 @@
 import nodemailer from 'nodemailer';
 
 // Serviço de notificações: envia alertas pro Igor via WhatsApp e email
-// quando um agendamento é realizado no bot.
-export function createNotificationService({ getSocket, config }) {
+// quando um agendamento é realizado (no bot ou no chat web).
+export function createNotificationService({ getSocket, config, dbEnqueue }) {
   const { notificacoes } = config;
 
   // Transporter do nodemailer (Gmail SMTP por padrão)
@@ -16,9 +16,23 @@ export function createNotificationService({ getSocket, config }) {
     return transporter;
   }
 
+  // Processos sem socket (chat web) não conseguem enviar WhatsApp direto:
+  // gravam o aviso na fila (avisos_pendentes) e o bot entrega depois.
   async function enviarWhatsApp(telefone, texto) {
+    if (!telefone) return { ok: false, motivo: 'whatsapp_indisponivel' };
     const socket = getSocket();
-    if (!socket || !telefone) return { ok: false, motivo: 'whatsapp_indisponivel' };
+    if (!socket) {
+      if (dbEnqueue) {
+        try {
+          dbEnqueue(texto);
+          console.log('[notif] WhatsApp indisponivel -> aviso enfileirado p/ bot');
+          return { ok: true, motivo: 'enfileirado' };
+        } catch (err) {
+          console.error('[notif] falha ao enfileirar aviso:', err.message);
+        }
+      }
+      return { ok: false, motivo: 'whatsapp_indisponivel' };
+    }
     try {
       await socket.sendMessage(`${telefone}@s.whatsapp.net`, { text: texto });
       return { ok: true };
@@ -48,8 +62,8 @@ export function createNotificationService({ getSocket, config }) {
   return {
     async notificarAgendamento({ data_hora, telefone, nome, motivo }) {
       const cliente = nome ? `${nome} (${telefone})` : telefone;
-      const textoWhatsApp = `📅 *Novo agendamento no bot*\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
-      const textoEmail = `Novo agendamento realizado pelo bot.\n\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
+      const textoWhatsApp = `📅 *Novo agendamento*\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
+      const textoEmail = `Novo agendamento realizado.\n\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
 
       const whatsapp = await enviarWhatsApp(notificacoes.whatsapp, textoWhatsApp);
       const email = await enviarEmail(`📅 Novo agendamento - ${data_hora}`, textoEmail);

@@ -30,8 +30,14 @@ const memory = createConversationMemory({
   summarizeEvery: config.memory.summarizeEvery,
 });
 const adapter = createLocalOpencodeAdapter();
-const executor = createToolExecutor({ repos, getSocket: () => null, config });
-const agent = createAgent({ adapter, executor });
+const executor = createToolExecutor({
+  repos,
+  getSocket: () => null,
+  config,
+  canal: 'web',
+  dbEnqueue: (texto) => repos.enfileirarAviso(texto),
+});
+const agent = createAgent({ adapter, executor, canal: 'web' });
 const summarizer = createSummarizer({ adapter });
 const imageService = createImageService({ getSocket: () => null, config });
 const pagina = fs.readFileSync(PAGINA_PATH, 'utf8');
@@ -72,6 +78,16 @@ function lerCliente(sessionId) {
     return {};
   }
   return { nome: cliente.nome, resumo: cliente.resumo || '' };
+}
+
+// Estado de bloqueio da sessão (chat web: temporário de 1h, expira sozinho).
+function estadoBloqueio(sessionId) {
+  try {
+    return repos.estadoChat(sessionId);
+  } catch (err) {
+    console.error('[web] falha ao checar bloqueio:', err.message);
+    return { bloqueado: false, temporario: false, motivo: null };
+  }
 }
 
 async function responder({ sessionId, mensagem }) {
@@ -197,6 +213,9 @@ const server = http.createServer(async (req, res) => {
     if (req.method === 'GET' && pathname === '/api/start') {
       const sessionId = url.searchParams.get('sessionId') || `web_${crypto.randomUUID()}`;
       lerCliente(sessionId);
+      if (estadoBloqueio(sessionId).bloqueado) {
+        return json(res, 200, { ok: true, sessionId, indisponivel: true });
+      }
       return json(res, 200, {
         ok: true,
         sessionId,
@@ -211,6 +230,13 @@ const server = http.createServer(async (req, res) => {
       const mensagem = String(body.message || '').trim().slice(0, 2_000);
 
       if (!mensagem) return json(res, 400, { ok: false, erro: 'Mensagem vazia.' });
+
+      // Chat fechado por comportamento abusivo: indisponível até expirar (1h)
+      const estado = estadoBloqueio(sessionId);
+      if (estado.bloqueado) {
+        return json(res, 200, { ok: true, indisponivel: true, motivo: estado.motivo });
+      }
+
       if (!liberal(sessionId)) {
         return json(res, 429, { ok: false, erro: 'Você está enviando rápido demais. Aguarde um instante e tente de novo. 😊' });
       }

@@ -54,6 +54,24 @@ function main() {
   const summarizer = createSummarizer({ adapter });
   const imageService = createImageService({ getSocket, config });
 
+  // Entrega avisos enfileirados por processos sem WhatsApp (chat web/painel):
+  // agendamentos, emergências etc. Verifica a cada 30s.
+  const drenarAvisosPendentes = async () => {
+    const socket = getSocket();
+    const numero = config.notificacoes?.whatsapp;
+    if (!socket || !numero) return;
+    try {
+      for (const aviso of repos.listarAvisosPendentes()) {
+        await socket.sendMessage(`${numero}@s.whatsapp.net`, { text: aviso.texto });
+        repos.removerAviso(aviso.id);
+        console.log(`[notif] aviso entregue via WhatsApp: ${aviso.texto.slice(0, 90)}`);
+      }
+    } catch (err) {
+      console.error('[notif] falha ao drenar avisos pendentes:', err.message);
+    }
+  };
+  setInterval(drenarAvisosPendentes, 30 * 1000);
+
   const onMessage = createMessageHandler({
     repos,
     getSocket,

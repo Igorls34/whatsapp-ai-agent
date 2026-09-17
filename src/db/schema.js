@@ -9,7 +9,11 @@ CREATE TABLE IF NOT EXISTS clientes (
   resumo             TEXT NOT NULL DEFAULT '',
   ultima_interacao_at TEXT,
   criado_em          TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
-  atualizado_em      TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  atualizado_em      TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+  chat_fechado       INTEGER NOT NULL DEFAULT 0,
+  motivo_bloqueio    TEXT,
+  bloqueado_em       TEXT,
+  desbloqueio_em     TEXT
 );
 
 -- ============================================================================
@@ -31,6 +35,16 @@ CREATE TABLE IF NOT EXISTS agenda (
 
 CREATE INDEX IF NOT EXISTS idx_agenda_status ON agenda (status, data_hora);
 CREATE INDEX IF NOT EXISTS idx_agenda_cliente ON agenda (cliente_telefone);
+
+-- ============================================================================
+-- Avisos pendentes (fila) — escritos por processos sem WhatsApp (chat web,
+-- painel) e entregues pelo bot, que tem o socket. Ex.: agendamento novo.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS avisos_pendentes (
+  id        INTEGER PRIMARY KEY AUTOINCREMENT,
+  texto     TEXT NOT NULL,
+  criado_em TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
 
 -- ============================================================================
 -- Serviços oferecidos pelo Igor (catálogo editável manualmente)

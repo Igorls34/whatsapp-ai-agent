@@ -34,6 +34,31 @@ export function createRepositories(db) {
       WHERE telefone = ?
     `),
 
+    // --- Controle de chat (bloqueio por abuso) ---
+
+    liberarBloqueio: db.prepare(`
+      UPDATE clientes
+      SET chat_fechado = 0,
+          motivo_bloqueio = NULL,
+          bloqueado_em = NULL,
+          desbloqueio_em = NULL,
+          atualizado_em = datetime('now', 'localtime')
+      WHERE telefone = ?
+    `),
+
+    fecharChat: db.prepare(`
+      UPDATE clientes
+      SET chat_fechado = 1,
+          motivo_bloqueio = @motivo,
+          bloqueado_em = datetime('now', 'localtime'),
+          desbloqueio_em = CASE
+            WHEN @horas IS NULL THEN NULL
+            ELSE datetime('now', 'localtime', '+' || @horas || ' hours')
+          END,
+          atualizado_em = datetime('now', 'localtime')
+      WHERE telefone = @telefone
+    `),
+
     slotsNoIntervalo: db.prepare(`
       SELECT * FROM agenda
       WHERE status = 'livre'
@@ -121,6 +146,47 @@ export function createRepositories(db) {
     `),
 
     excluirServico: db.prepare(`DELETE FROM servicos WHERE id = ?`),
+
+    // --- Fila de avisos pendentes (web/outros processos -> bot) ---
+
+    listarAvisosPendentes: db.prepare(`
+      SELECT id, texto, criado_em FROM avisos_pendentes ORDER BY id LIMIT 25
+    `),
+
+    enfileirarAviso: db.prepare(
+      `INSERT INTO avisos_pendentes (texto) VALUES (?)`
+    ),
+
+    removerAviso: db.prepare(`DELETE FROM avisos_pendentes WHERE id = ?`),
+
+    // --- Agenda (CRUD admin) ---
+
+    getAgendamento: db.prepare(`
+      SELECT a.id, a.data_hora, a.status, a.cliente_telefone, a.cliente_nome,
+             a.motivo, a.resumo, c.resumo AS cliente_resumo
+      FROM agenda a LEFT JOIN clientes c ON c.telefone = a.cliente_telefone
+      WHERE a.id = ?
+    `),
+
+    getPorDataHora: db.prepare(`SELECT id, status FROM agenda WHERE data_hora = ?`),
+
+    inserirAgenda: db.prepare(`
+      INSERT INTO agenda (data_hora, status, cliente_telefone, cliente_nome, motivo)
+      VALUES (@data_hora, @status, @cliente_telefone, @cliente_nome, @motivo)
+    `),
+
+    atualizarAgendamento: db.prepare(`
+      UPDATE agenda
+      SET data_hora = @data_hora,
+          status = @status,
+          cliente_telefone = @cliente_telefone,
+          cliente_nome = @cliente_nome,
+          motivo = @motivo,
+          atualizado_em = datetime('now', 'localtime')
+      WHERE id = @id
+    `),
+
+    excluirAgendamento: db.prepare(`DELETE FROM agenda WHERE id = ?`),
   };
 
   return {
@@ -139,6 +205,44 @@ export function createRepositories(db) {
 
     tocarUltimaInteracao(telefone) {
       stmts.tocarInteracao.run(telefone);
+    },
+
+    // --- Controle de chat (bloqueio por abuso) ---
+
+    // Estado de bloqueio no momento: resolve expiração de bloqueio temporário.
+    // Retorna { bloqueado, motivo, temporario, desbloqueio_em, bloqueado_em }.
+    estadoChat(telefone) {
+      const c = stmts.getCliente.get(telefone);
+      if (!c?.chat_fechado) return { bloqueado: false, temporario: false, motivo: null };
+      const expira = c.desbloqueio_em;
+      if (expira) {
+        const t = Date.parse(String(expira).replace(' ', 'T'));
+        if (Number.isNaN(t) || Date.now() >= t) {
+          stmts.liberarBloqueio.run(telefone);
+          return { bloqueado: false, temporario: true, motivo: null };
+        }
+      }
+      return {
+        bloqueado: true,
+        motivo: c.motivo_bloqueio,
+        temporario: Boolean(expira),
+        desbloqueio_em: expira,
+        bloqueado_em: c.bloqueado_em,
+      };
+    },
+
+    // Fecha o chat: horas = null -> permanente (WhatsApp); horas = n -> temporário (web).
+    fecharChat({ telefone, motivo, horas = null }) {
+      const r = stmts.fecharChat.run({ telefone, motivo, horas });
+      return {
+        ok: r.changes > 0,
+        temporario: Boolean(horas),
+        horas,
+      };
+    },
+
+    liberarChat(telefone) {
+      stmts.liberarBloqueio.run(telefone);
     },
 
     // --- Agenda ---
@@ -206,6 +310,117 @@ export function createRepositories(db) {
 
     excluirServico(id) {
       return stmts.excluirServico.run(id).changes > 0;
+    },
+
+    // --- Fila de avisos pendentes ---
+
+    listarAvisosPendentes() {
+      return stmts.listarAvisosPendentes.all();
+    },
+
+    enfileirarAviso(texto) {
+      stmts.enfileirarAviso.run(texto);
+    },
+
+    removerAviso(id) {
+      stmts.removerAviso.run(id);
+    },
+
+    // --- Agenda (CRUD admin) ---
+
+    listarAgenda({ status = 'todos', de = null, ate = null } = {}) {
+      const conds = [];
+      const params = {};
+      if (status && status !== 'todos') {
+        conds.push('a.status = @status');
+        params.status = status;
+      }
+      if (de) {
+        conds.push('a.data_hora >= @de');
+        params.de = de;
+      }
+      if (ate) {
+        conds.push('a.data_hora < @ate');
+        params.ate = ate;
+      }
+      const where = conds.length ? `WHERE ${conds.join(' AND ')}` : '';
+      return db
+        .prepare(`
+          SELECT a.id, a.data_hora, a.status, a.cliente_telefone, a.cliente_nome,
+                 a.motivo, a.resumo, c.resumo AS cliente_resumo
+          FROM agenda a LEFT JOIN clientes c ON c.telefone = a.cliente_telefone
+          ${where}
+          ORDER BY CASE a.status WHEN 'agendado' THEN 0 WHEN 'confirmada' THEN 1
+                   WHEN 'cancelada' THEN 2 WHEN 'livre' THEN 3 ELSE 4 END,
+                   a.data_hora ASC, a.id ASC
+        `)
+        .all(params);
+    },
+
+    getAgendamento(id) {
+      return stmts.getAgendamento.get(id) || null;
+    },
+
+    criarAgendamento({ data_hora, status = 'livre', cliente_telefone = null, cliente_nome = null, motivo = null }) {
+      const getCliente = stmts.getCliente.get.bind(stmts.getCliente);
+      const upsertCliente = stmts.upsertCliente.run.bind(stmts.upsertCliente);
+      return db.transaction(() => {
+        const existente = stmts.getPorDataHora.get(data_hora);
+        if (existente) {
+          if (existente.status !== 'livre') return { ok: false, motivo: 'horario_ocupado' };
+          if (status === 'livre') return { ok: true, id: existente.id };
+          stmts.reservarSlot.run({
+            id: existente.id,
+            telefone: cliente_telefone || 'manual',
+            nome: cliente_nome,
+            motivo,
+          });
+          if (cliente_telefone && !getCliente(cliente_telefone)) upsertCliente({ telefone: cliente_telefone, nome: cliente_nome });
+          return { ok: true, id: existente.id };
+        }
+        const info = stmts.inserirAgenda.run({
+          data_hora,
+          status,
+          cliente_telefone: status === 'livre' ? null : cliente_telefone || 'manual',
+          cliente_nome: status === 'livre' ? null : cliente_nome,
+          motivo,
+        });
+        const id = info.lastInsertRowid;
+        if (status !== 'livre' && cliente_telefone && !getCliente(cliente_telefone)) {
+          upsertCliente({ telefone: cliente_telefone, nome: cliente_nome });
+        }
+        return { ok: true, id };
+      })();
+    },
+
+    atualizarAgendamento({ id, data_hora, status = 'agendado', cliente_telefone = null, cliente_nome = null, motivo = null }) {
+      const getCliente = stmts.getCliente.get.bind(stmts.getCliente);
+      const upsertCliente = stmts.upsertCliente.run.bind(stmts.upsertCliente);
+      return db.transaction(() => {
+        const atual = stmts.getAgendamento.get(id);
+        if (!atual) return { ok: false, motivo: 'nao_encontrado' };
+        const ocupado = stmts.getPorDataHora.get(data_hora);
+        if (ocupado && ocupado.id !== id) return { ok: false, motivo: 'horario_ocupado' };
+
+        let telefone = cliente_telefone;
+        let nome = cliente_nome;
+        if (status === 'livre') {
+          telefone = null;
+          nome = null;
+        } else if (!telefone) {
+          telefone = atual.cliente_telefone || 'manual';
+          nome = nome || atual.cliente_nome;
+        }
+        if (status !== 'livre' && telefone && !getCliente(telefone)) {
+          upsertCliente({ telefone, nome });
+        }
+        stmts.atualizarAgendamento.run({ id, data_hora, status, cliente_telefone: telefone, cliente_nome: nome, motivo });
+        return { ok: true, id };
+      })();
+    },
+
+    excluirAgendamento(id) {
+      return stmts.excluirAgendamento.run(id).changes > 0;
     },
   };
 }
