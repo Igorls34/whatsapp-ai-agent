@@ -2,9 +2,15 @@
 
 Guia prático para o Igor ajustar o bot sem precisar de código.
 
+> Para explicações de como cada funcionalidade funciona por dentro, veja [FEATURES.md](FEATURES.md) — cada uma tem página dedicada.
+
 ## Catálogo de serviços
 
-Os serviços ficam na tabela `servicos` do SQLite (`data/agent.db`). Campos: `nome`, `descricao`, `preco`, `ativo`, `ordem`.
+A forma mais fácil é o **painel web** (CRUD): rode `npm run admin` e abra `http://127.0.0.1:3000`. Lá você pode criar, editar, ativar/desativar e excluir serviços pelo navegador — as mudanças valem imediatamente, sem reiniciar o bot. Detalhes técnicos: [painel-admin.md](features/painel-admin.md).
+
+Alternativamente, direto no banco:
+
+Os serviços ficam na tabela `servicos` do SQLite (`data/agent.db`). Campos: `nome`, `descricao`, `ativo`, `ordem` (a coluna `preco`, se existir, não é usada pelo bot).
 
 É a **única fonte da verdade** do LLM: ele só apresenta o que estiver cadastrado e `ativo = 1`.
 
@@ -18,7 +24,7 @@ node -e "const db=require('better-sqlite3')('data/agent.db'); console.log(db.pre
 Ou, de forma mais amigável, use uma ferramenta de SQLite (ex.: [DB Browser for SQLite](https://sqlitebrowser.org/)) abrindo `data/agent.db` e editando a tabela `servicos`.
 
 Regras:
-- `preco` no formato texto, ex.: `R$ 100,00` ou `entre R$ 150,00 e R$ 250,00`.
+- **Valores nunca são falados pelo bot** — por regra de negócio, o bot não informa preços de nenhum serviço. Se o cliente perguntar quanto custa, o bot remete ao Igor e sugere agendar uma reunião para ele passar o orçamento. Mantenha a coluna `preco` do banco sem dados (ou preencha, mas o bot não lê).
 - `ativo = 0` esconde o serviço sem apagar (útil em promoções/lançamentos).
 - `ordem` controla a exibição (menor primeiro).
 

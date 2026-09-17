@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Catálogo de Serviços — Igor Dev</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --border: #dfe3e8;
+      --text: #1c2733;
+      --muted: #6b7684;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --danger: #dc2626;
+      --ok: #16a34a;
+      --radius: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 64px; }
+
+    header h1 { font-size: 22px; margin: 0 0 4px; }
+    header p { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+
+    .banner {
+      background: #fff7e6;
+      border: 1px solid #f5c659;
+      color: #7a5b00;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+
+    .card h2 { margin: 0 0 14px; font-size: 15px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+
+    form#servico-form { display: grid; gap: 12px; }
+
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .field label { font-size: 13px; font-weight: 600; }
+    .field input[type="text"],
+    .field textarea,
+    .field input[type="number"] {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fbfcfe;
+    }
+    .field textarea { min-height: 70px; resize: vertical; }
+    .field input:focus, .field textarea:focus { outline: 2px solid var(--primary); outline-offset: -1px; }
+
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row .field { flex: 1; min-width: 120px; }
+    .field.check { flex-direction: row; align-items: center; gap: 8px; }
+
+    .form-actions { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: #f0f2f5; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(.9); }
+    .btn-sm { padding: 5px 10px; font-size: 13px; font-weight: 500; }
+
+    #status { font-size: 13px; margin-left: 4px; }
+    #status.ok { color: var(--ok); }
+    #status.err { color: var(--danger); }
+    #status.hide { visibility: hidden; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+    td.ordem { width: 52px; color: var(--muted); }
+    td.nome strong { display: inline-block; margin-bottom: 2px; }
+    td.cat { width: 170px; }
+    td.desc { color: var(--muted); font-size: 13px; max-width: 340px; }
+    td.ativo-cel, th.ativo-cel { width: 110px; }
+    td.acoes { width: 150px; }
+    td.acoes button { margin-right: 6px; }
+
+    .switch { position: relative; display: inline-block; width: 38px; height: 22px; vertical-align: middle; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer; border-radius: 22px;
+      background: #cbd2da; transition: background .15s;
+    }
+    .slider::before {
+      content: ""; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px;
+      background: #fff; border-radius: 50%; transition: transform .15s;
+    }
+    .switch input:checked + .slider { background: var(--ok); }
+    .switch input:checked + .slider::before { transform: translateX(16px); }
+
+    .empty { color: var(--muted); text-align: center; padding: 18px 0; }
+
+    .tag {
+      display: inline-block;
+      background: #eef3ff;
+      color: #1d4ed8;
+      border: 1px solid #d3e0fd;
+      border-radius: 999px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    @media (max-width: 640px) {
+      .row { flex-direction: column; }
+      td.desc { max-width: 220px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Catálogo de Serviços</h1>
+      <p>Gerencia o que o assistente do Igor apresenta aos clientes.</p>
+    </header>
+
+    <div class="banner">ℹ️ O bot <strong>nunca informa valores</strong> aos clientes — o orçamento é passado pessoalmente pelo Igor. As alterações feitas aqui valem <strong>imediatamente</strong>, sem reiniciar o bot.</div>
+
+    <section class="card">
+      <h2 id="form-title">Novo serviço</h2>
+      <form id="servico-form" novalidate>
+        <div class="field">
+          <label for="nome">Nome do serviço *</label>
+          <input type="text" id="nome" name="nome" placeholder="Ex: Formatação de computador" required />
+        </div>
+        <div class="field">
+          <label for="descricao">Descrição</label>
+          <textarea id="descricao" name="descricao" placeholder="O que está incluso, para quem é, etc."></textarea>
+        </div>
+        <div class="field">
+          <label for="categoria">Categoria</label>
+          <input type="text" id="categoria" name="categoria" list="categorias-sug" placeholder="Ex: Design Gráfico, Engenharia, Montagem e Hardware..." />
+          <datalist id="categorias-sug"></datalist>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="ordem">Ordem de exibição</label>
+            <input type="number" id="ordem" name="ordem" value="0" min="0" />
+          </div>
+          <div class="field check">
+            <label class="switch">
+              <input type="checkbox" id="ativo" name="ativo" checked />
+              <span class="slider"></span>
+            </label>
+            <label for="ativo" style="font-weight:600;">Ativo</label>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="submit-btn">Cadastrar</button>
+          <button type="button" class="btn-ghost" id="cancelar-btn" hidden>Cancelar edição</button>
+          <span id="status" class="hide"></span>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Serviços cadastrados</h2>
+      <div id="lista"></div>
+    </section>
+  </main>
+
+  <script>
+    const listaEl = document.getElementById('lista');
+    const formEl = document.getElementById('servico-form');
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submit-btn');
+    const cancelarBtn = document.getElementById('cancelar-btn');
+    const statusEl = document.getElementById('status');
+    let editandoId = null;
+
+    const status = (msg, ok = true) => {
+      statusEl.className = 'ok';
+      statusEl.classList.toggle('err', !ok);
+      statusEl.textContent = msg;
+      if (msg) statusEl.classList.remove('hide');
+      else statusEl.classList.add('hide');
+    };
+
+    const esc = (s) =>
+      String(s ?? '').replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+      );
+
+    async function api(url, method = 'GET', body) {
+      const res = await fetch(url, {
+        method,
+        headers: body !== undefined ? { 'Content-Type': 'application/json' } : {},
+        body: body !== undefined ? JSON.stringify(body) : undefined,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.erro || 'Falha na requisição');
+      return data;
+    }
+
+    function preencherForm(service) {
+      editandoId = service.id;
+      document.getElementById('nome').value = service.nome;
+      document.getElementById('descricao').value = service.descricao || '';
+      document.getElementById('categoria').value = service.categoria || '';
+      document.getElementById('ordem').value = service.ordem ?? 0;
+      document.getElementById('ativo').checked = !!service.ativo;
+      formTitle.textContent = `Editar: ${service.nome}`;
+      submitBtn.textContent = 'Salvar alterações';
+      cancelarBtn.hidden = false;
+    }
+
+    function limparForm() {
+      editandoId = null;
+      formEl.reset();
+      document.getElementById('ativo').checked = true;
+      formTitle.textContent = 'Novo serviço';
+      submitBtn.textContent = 'Cadastrar';
+      cancelarBtn.hidden = true;
+    }
+
+    async function carregarCategorias() {
+      try {
+        const { categorias } = await api('/api/categorias');
+        document.getElementById('categorias-sug').innerHTML = categorias
+          .map((c) => `<option value="${esc(c)}"></option>`)
+          .join('');
+      } catch (_) {
+        /* sugestões não críticas */
+      }
+    }
+
+    async function carregarLista() {
+      try {
+        const { servicos } = await api('/api/servicos');
+        if (!servicos.length) {
+          listaEl.innerHTML = '<p class="empty">Nenhum serviço cadastrado ainda.</p>';
+          return;
+        }
+        listaEl.innerHTML = `
+          <table>
+            <thead>
+              <tr>
+                <th>Ordem</th>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Descrição</th>
+                <th class="ativo-cel">Ativo</th>
+                <th class="acoes">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${servicos.map((s) => `
+                <tr>
+                  <td class="ordem">${s.ordem ?? 0}</td>
+                  <td class="nome"><strong>${esc(s.nome)}</strong></td>
+                  <td class="cat">${s.categoria ? `<span class="tag">${esc(s.categoria)}</span>` : '—'}</td>
+                  <td class="desc">${esc(s.descricao || '—')}</td>
+                  <td class="ativo-cel">
+                    <label class="switch">
+                      <input type="checkbox" ${s.ativo ? 'checked' : ''} onchange="toggleAtivo(${s.id}, this.checked)" />
+                      <span class="slider"></span>
+                    </label>
+                  </td>
+                  <td class="acoes">
+                    <button class="btn-primary btn-sm" onclick="editar(${s.id})">Editar</button>
+                    <button class="btn-danger btn-sm" onclick="excluir(${s.id})">Excluir</button>
+                  </td>
+                </tr>`).join('')}
+            </tbody>
+          </table>`;
+      } catch (err) {
+        listaEl.innerHTML = `<p class="empty">Erro ao carregar: ${esc(err.message)}</p>`;
+      }
+    }
+
+    window.editar = async (id) => {
+      const { servicos } = await api('/api/servicos');
+      const s = servicos.find((x) => x.id === id);
+      if (s) {
+        preencherForm(s);
+        formEl.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
+    window.toggleAtivo = async (id, ativo) => {
+      try {
+        const { servicos } = await api('/api/servicos');
+        const s = servicos.find((x) => x.id === id);
+        await api(`/api/servicos/${id}`, 'PUT', { ...s, ativo });
+        await carregarLista();
+        status('Atualizado!');
+      } catch (err) {
+        status(err.message, false);
+        await carregarLista();
+      }
+    };
+
+    window.excluir = async (id) => {
+      const nome = prompt('Digite o nome do serviço para confirmar a exclusão:');
+      if (!nome) return;
+      try {
+        const { servicos } = await api('/api/servicos');
+        const alvo = servicos.find((x) => x.id === id);
+        if (alvo && alvo.nome.toLowerCase() !== nome.trim().toLowerCase()) {
+          status('Nome não confere. Exclusão cancelada.', false);
+          return;
+        }
+        await api(`/api/servicos/${id}`, 'DELETE');
+        if (editandoId === id) limparForm();
+        await carregarLista();
+        status('Serviço excluído.');
+      } catch (err) {
+        status(err.message, false);
+      }
+    };
+
+    formEl.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const payload = {
+        nome: document.getElementById('nome').value.trim(),
+        descricao: document.getElementById('descricao').value.trim(),
+        categoria: document.getElementById('categoria').value.trim(),
+        ordem: Number(document.getElementById('ordem').value || 0),
+        ativo: document.getElementById('ativo').checked,
+      };
+      if (!payload.nome) {
+        status('Informe o nome do serviço.', false);
+        return;
+      }
+      try {
+        if (editandoId) {
+          await api(`/api/servicos/${editandoId}`, 'PUT', payload);
+          status('Serviço atualizado!');
+        } else {
+          await api('/api/servicos', 'POST', payload);
+          status('Serviço cadastrado!');
+        }
+        limparForm();
+        await carregarLista();
+      } catch (err) {
+        status(err.message, false);
+      }
+    });
+
+    cancelarBtn.addEventListener('click', limparForm);
+
+    carregarCategorias();
+    carregarLista();
+  </script>
+</body>
+</html>

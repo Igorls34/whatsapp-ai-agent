@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assistente Virtual — Igor Dev</title>
+  <style>
+    :root {
+      --bg: #eef1f5;
+      --card: #ffffff;
+      --border: #dde2ea;
+      --text: #1c2733;
+      --muted: #6b7684;
+      --bot: #f1f3f6;
+      --user: #dcf8c6;
+      --accent: #25d366;
+      --accent-dark: #1fb257;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      color: var(--text);
+    }
+
+    .chat {
+      width: 100%;
+      max-width: 440px;
+      height: min(720px, 100vh);
+      display: flex;
+      flex-direction: column;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 12px 40px rgba(20, 30, 50, .12);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #25d366, #128c7e);
+      color: #fff;
+    }
+    .avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255, 255, 255, .25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    header .titulo { font-weight: 700; font-size: 15px; line-height: 1.2; }
+    header .status { font-size: 12px; opacity: .9; }
+    .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #fff; margin-right: 6px; }
+
+    #msgs {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(37, 211, 102, .05), transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(37, 211, 102, .06), transparent 40%), var(--card);
+    }
+
+    .msg {
+      max-width: 82%;
+      padding: 9px 13px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .msg.bot { align-self: flex-start; background: var(--bot); border-bottom-left-radius: 4px; }
+    .msg.user { align-self: flex-end; background: var(--user); border-bottom-right-radius: 4px; }
+    .msg.typing { color: var(--muted); font-style: italic; }
+
+    .bar {
+      display: flex;
+      gap: 8px;
+      padding: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .bar input {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      background: #fbfcfe;
+    }
+    .bar input:focus { border-color: var(--accent); }
+    .bar button {
+      border: none;
+      border-radius: 50%;
+      width: 44px; height: 44px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .bar button:hover { background: var(--accent-dark); }
+    .bar button:disabled { opacity: .5; cursor: default; }
+
+    footer {
+      padding: 8px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="chat">
+    <header>
+      <div class="avatar">🤖</div>
+      <div>
+        <div class="titulo">Assistente Virtual · Igor Dev</div>
+        <div class="status"><span class="dot"></span><span id="sttxt">conectando…</span></div>
+      </div>
+    </header>
+
+    <main id="msgs"></main>
+
+    <div class="bar">
+      <input id="inp" type="text" placeholder="Digite sua mensagem…" autocomplete="off" maxlength="2000" />
+      <button id="send" title="Enviar">➤</button>
+    </div>
+
+    <footer>💬 Este é o outro lado do bot que atende no WhatsApp do Igor Dev.</footer>
+  </div>
+
+  <script>
+    const msgs = document.getElementById('msgs');
+    const inp = document.getElementById('inp');
+    const send = document.getElementById('send');
+    const sttxt = document.getElementById('sttxt');
+
+    let sessionId = localStorage.getItem('web_chat_session');
+
+    function addMsg(texto, quem = 'bot') {
+      const el = document.createElement('div');
+      el.className = `msg ${quem}`;
+      el.textContent = texto;
+      msgs.appendChild(el);
+      msgs.scrollTop = msgs.scrollHeight;
+      return el;
+    }
+
+    function addPartes(texto) {
+      String(texto || '')
+        .split('|||')
+        .map((p) => p.trim())
+        .filter(Boolean)
+        .forEach((p) => addMsg(p, 'bot'));
+    }
+
+    async function iniciar() {
+      try {
+        const res = await fetch(`/api/start${sessionId ? `?sessionId=${sessionId}` : ''}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.erro);
+        sessionId = data.sessionId;
+        localStorage.setItem('web_chat_session', sessionId);
+        sttxt.textContent = 'online';
+      } catch (_) {
+        sttxt.textContent = 'offline';
+        addMsg('Estou com instabilidade agora 😅. Tente de novo em instantes.', 'bot');
+      }
+    }
+
+    async function enviar() {
+      const texto = inp.value.trim();
+      if (!texto) return;
+
+      inp.value = '';
+      addMsg(texto, 'user');
+
+      const typing = addMsg('digitando…', 'bot typing');
+      send.disabled = true;
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, message: texto }),
+        });
+        const data = await res.json();
+        typing.remove();
+        if (!res.ok) throw new Error(data.erro || 'Falha na resposta');
+        addPartes(data.reply);
+      } catch (err) {
+        typing.remove();
+        addMsg(err.message || 'Não consegui responder agora 😅', 'bot');
+      } finally {
+        send.disabled = false;
+        inp.focus();
+      }
+    }
+
+    send.addEventListener('click', enviar);
+    inp.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') enviar();
+    });
+
+    iniciar();
+    inp.focus();
+  </script>
+</body>
+</html>

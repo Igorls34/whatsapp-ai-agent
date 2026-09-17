@@ -11,6 +11,8 @@ const MAX_ROUNDS = 6;
 // ferramentas de negócio neste processo via protocolo de texto (===TOOL===).
 // Monta a seção de catálogo de serviços para o system prompt.
 // Baseia-se SOMENTE no que veio do banco (lista editável manualmente).
+// IMPORTANTE: o catálogo NUNCA inclui preços — valores só são passados pelo
+// Igor pessoalmente, nunca pelo bot.
 export function buildServiceCatalog(servicos = []) {
   if (!servicos.length) {
     return (
@@ -19,14 +21,20 @@ export function buildServiceCatalog(servicos = []) {
       'e automações, mas SEM listar serviços específicos até o Igor preencher.)'
     );
   }
-  const linhas = servicos
-    .map((s) => {
-      const partes = [`- ${s.nome}`, s.descricao ? `: ${s.descricao}` : ''];
-      if (s.preco) partes.push(` (${s.preco})`);
-      return partes.join('');
-    })
-    .join('\n');
-  return `## Catálogo de Serviços do Igor\n${linhas}`;
+  const linhas = [];
+  const grupos = new Map();
+  for (const s of servicos) {
+    const chave = s.categoria || 'Outros serviços';
+    if (!grupos.has(chave)) grupos.set(chave, []);
+    grupos.get(chave).push(s);
+  }
+  for (const [categoria, itens] of grupos) {
+    linhas.push(`### ${categoria}`);
+    for (const s of itens) {
+      linhas.push(`- ${s.nome}${s.descricao ? `: ${s.descricao}` : ''}`);
+    }
+  }
+  return `## Catálogo de Serviços do Igor\n${linhas.join('\n')}`;
 }
 
 export function buildImageCatalog(imagens = []) {

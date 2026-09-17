@@ -11,6 +11,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "serve": "opencode serve --port 4096",
+    "admin": "node src/admin/server.js",
+    "web": "node src/web/server.js",
     "seed": "node scripts/seed.js",
     "test:llm": "node scripts/test-llm.js"
   },

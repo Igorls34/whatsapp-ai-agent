@@ -2,6 +2,8 @@
 
 O bot envia emails de agendamento usando o SMTP do Gmail **gratuito**, via **senha de aplicativo** (app password). A senha de app é distinta da senha da sua conta — serve só para o bot.
 
+> Contexto completo da funcionalidade de notificações: [notificacoes.md](features/notificacoes.md)
+
 ## Passo a passo
 
 1. **Ative a Verificação em 2 etapas** na sua conta Google (obrigatório para criar senha de app):

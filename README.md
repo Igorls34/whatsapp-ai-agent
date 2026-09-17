@@ -1,122 +1,208 @@
-# WhatsApp AI Agent — Igor Dev
+<div align="center">
 
-Assistente virtual 24/7 do **Igor Laurindo (Igor Dev)** para WhatsApp. Atende clientes, apresenta os serviços do Igor (suporte/instalação **e** desenvolvimento de software), agenda reuniões na agenda dele com regras de horário de trabalho, e mantém memória de longo prazo de cada cliente em SQLite.
+# 🤖 WhatsApp AI Agent — Igor Dev
 
-O "cérebro" é o **próprio opencode executando localmente** (modelo gratuito via `opencode serve`) — sem depender de OpenAI ou API keys para começar.
+**Assistente virtual 24/7 para WhatsApp** — um **agente de IA** que atende os clientes do Igor, apresenta os serviços dele, agenda reuniões respeitando os horários de trabalho e lembra de cada cliente entre conversas. O "cérebro" é o **próprio opencode rodando localmente** (`opencode serve`) — sem API keys para começar.
+
+[![Node.js ≥ 20](https://img.shields.io/badge/Node.js-%E2%89%A5%2020-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![JavaScript ESM](https://img.shields.io/badge/JavaScript-ESM-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](#)
+[![WhatsApp · Baileys](https://img.shields.io/badge/WhatsApp-Baileys-25D366?style=for-the-badge&logo=whatsapp&logoColor=white)](#)
+[![SQLite](https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#)
+[![IA local · opencode](https://img.shields.io/badge/IA_local-opencode_serve-000000?style=for-the-badge)](#)
+
+> **📚 Documentação completa** — cada funcionalidade tem **página dedicada**: [`docs/FEATURES.md`](docs/FEATURES.md)
+
+</div>
+
+## 📑 Sumário
+
+- [🚀 O agente (núcleo)](#nucleo)
+- [🧩 Funcionalidades complementares](#features)
+- [🏗️ Arquitetura](#arquitetura)
+- [⚙️ Como rodar](#como-rodar)
+- [🗄️ Banco de Dados](#banco-de-dados)
+- [🔧 Configuração (.env)](#configuracao)
+- [🧰 Comandos](#comandos)
+- [🛠️ Dependências](#dependencias)
+- [📚 Documentação](#documentacao)
+- [🔒 Aviso de privacidade](#privacidade)
 
 ---
 
-## Funcionalidades
+## <a id="nucleo"></a> 🚀 O agente (núcleo)
 
-- **Atendimento 24/7** no WhatsApp via Baileys, com fallback para reconexão automática (socket sempre atualizado).
-- **Catálogo de serviços** em SQLite (tabela `servicos`): o LLM apresenta **apenas** os serviços cadastrados (nome, descrição, preço). Serviço fora do catálogo → sugere reunião com o Igor (desenvolvimento sob medida).
-- **Agendamento inteligente** com agenda bloqueada nos horários de trabalho do Igor:
-  - Seg–Qui: bloqueado 12h–21h · Sex: 10h–19h · Sáb: 8h–14h · Dom: livre.
-  - Janela de agendamento 07h–00h, slots de hora em hora.
-- **Memória de longo prazo** por cliente (SQLite) + histórico volátil por sessão.
-- **Notificação no agendamento:** aviso automático para o Igor via **WhatsApp** e **email (Gmail SMTP)** com os dados da reunião.
-- **Emergências:** ferramenta `notificar_emergencia` avisa o Igor (WhatsApp ou log) quando um cliente preciute atendimento humano.
-- **Boas-vindas** para cliente novo ou inativo (+24h), com GIF/imagem (opcional) ou só texto.
-- **Mensagens múltiplas:** o LLM pode quebrar a resposta em até 3 mensagens (`|||`) com 1,5s de intervalo.
-- **Edge cases:** mídia (imagem/vídeo/áudio/sticker) é respondida pedindo texto; banco offline cai num atendimento genérico; agenda cheia tem resposta amigável.
+O coração do projeto: um atendente virtual que conversa de verdade com os clientes pelo WhatsApp.
+
+- **Atendimento 24/7** via Baileys, com reconexão automática.
+- **Catálogo de serviços** como fonte da verdade (tabela `servicos`): o LLM apresenta **apenas** o que está cadastrado (nome + descrição).
+- **Valores? Nunca.** O bot **não informa preços** ao cliente — orçamento é passado pessoalmente pelo Igor (*detalhe em [agente-ia.md](docs/features/agente-ia.md)*).
+- **Contexto por cliente:** resumo persistido + sessão viva no opencode (uma sessão por cliente).
+- **Ferramentas via protocolo `===TOOL===…===END===`:** o modelo chama funções de negócio executadas localmente.
+- **Mensagens múltiplas:** respostas divididas em até 3 mensagens (`|||`, 1,5s) + **boas-vindas** para cliente novo/inativo.
+- **Edge cases cobertos:** mídia pede texto, banco offline tem resposta genérica, agenda cheia tem resposta amigável.
+
+> [!TIP]
+> Quer entender o núcleo a fundo (loop de raciocínio, protocolo de ferramentas, guardrails, backend alternativo)? Veja **[docs/features/agente-ia.md](docs/features/agente-ia.md)**.
+
+## <a id="features"></a> 🧩 Funcionalidades complementares
+
+Implementadas **em cima do núcleo**, cada uma com página própria:
+
+| Feature | O que faz | Página dedicada |
+|---------|-----------|-----------------|
+| 📅 **Agendamento inteligente** | Agenda reuniões fora dos horários de trabalho; slots gerados sozinhos | [agendamento.md](docs/features/agendamento.md) |
+| 🧠 **Memória de longo prazo** | Lembra de cada cliente entre conversas (resumo em SQLite) | [memoria.md](docs/features/memoria.md) |
+| 🔔 **Notificações** | Avisa o Igor de agendamentos (WhatsApp + email) e emergências | [notificacoes.md](docs/features/notificacoes.md) |
+| 🖼️ **Imagens / GIFs** | Envia logo, catálogo visual e GIF de boas-vindas via `manifest.json` | [imagens.md](docs/features/imagens.md) |
+| 🛠️ **Painel admin (CRUD)** | Página web + API REST para gerenciar os serviços sem SQL | [painel-admin.md](docs/features/painel-admin.md) |
+| 💬 **Chat Web** | Página de chat para conversar com o **mesmo agente** no navegador | [chat-web.md](docs/features/chat-web.md) |
+
+> [!NOTE]
+> Índice completo com núcleo **e** features: **[docs/FEATURES.md](docs/FEATURES.md)**.
 
 ---
 
-## Arquitetura
+## <a id="arquitetura"></a> 🏗️ Arquitetura
 
+```mermaid
+flowchart LR
+    C{{Cliente}} <-->|"mensagens<br/>(WhatsApp)"| H["messageHandler"]
+    H -->|"contexto + catálogo"| A["agent"]
+    A <-->|"prompt ⇄ resposta"| L["LLM local<br/>:4096"]
+    A -->|"===TOOL==="| T["toolExecutor"]
+    T -->|"lê/grava<br/>agenda · cliente · servicos"| DB[("SQLite")]
+    H -->|"grava resumo"| DB
 ```
-WhatsApp (Baileys)
-   │  mensagem recebida (texto/mídia)
-   ▼
-[src/whatsapp/messageHandler.js]   fluxo RAG:
-  1. extrai telefone (suporte a jid @lid)
-  2. trata mídia / boas-vindas / memória persistente
-  3. injeta catálogo de serviços + imagens + resumo do cliente no system prompt
-  4. chama o agente (LLM) → resposta (pode ser múltiplas mensagens)
-  5. periodicamente regrava o resumo no banco
-   ▼
-[src/llm/agent.js]                 loop de até 6 rodadas
-   │  "===TOOL==={json}===END==="  ← protocolo de function calling via texto
-   ▼
-[src/services/toolExecutor.js]     executa as ferramentas NO PRÓPRIO PROCESSO
-   ├─ consultar_disponibilidade()  → availabilityService.js
-   ├─ agendar_reuniao()            → schedulingService.js (+ notifica Igor por WhatsApp/email)
-   ├─ salvar_resumo_cliente()      → clientMemoryService.js
-   ├─ notificar_emergencia()       → emergencyService.js
-   └─ enviar_imagem()              → imageService.js (se IMAGENS_ATIVO=true)
-   ▼
-[src/db/]  SQLite (better-sqlite3)  tabelas: clientes + agenda + servicos
-   ▼
-[opencode serve :4096]            o LLM em si (local e gratuito)
+
+### Legenda
+
+| Elemento | O que é | Papel no fluxo |
+|---|---|---|
+| **Cliente** | A pessoa que conversa com o Igor pelo WhatsApp | Envia mensagens e recebe as respostas do bot |
+| **messageHandler** (`src/whatsapp/messageHandler.js`) | Orquestrador de cada mensagem | Resolve o telefone, trata mídia/boas-vindas, injeta contexto e envia a resposta final |
+| **agent** (`src/llm/agent.js`) | Loop de raciocínio que conversa com o LLM | Monta o prompt e executa ferramentas quando o LLM pede |
+| **LLM local** (`opencode serve :4096`) | O "cérebro": modelo de IA rodando no opencode | Gera as respostas do bot |
+| **toolExecutor** (`src/services/toolExecutor.js`) | Executor de funções de negócio | Agenda, consulta disponibilidade, salva resumo, notifica emergência, envia imagem |
+| **SQLite** (`data/agent.db`) | Banco de dados local | Clientees, agenda e catálogo de serviços |
+
+Fluxo de cada mensagem, em detalhe:
+
+```mermaid
+sequenceDiagram
+    participant C as Cliente
+    participant H as messageHandler
+    participant A as agent
+    participant L as LLM (opencode :4096)
+
+    C->>H: mensagem
+    H->>A: run({ resumo, mensagem, serviços })
+    A->>L: prompt (contexto + catálogo)
+    L-->>A: resposta
+
+    Note over A,L: Se a resposta for uma ferramenta (===TOOL===),<br/>o agent executa e devolve o resultado<br/>ao LLM (loop de até 6 rodadas)
+
+    A->>H: resposta final
+    H-->>C: mensagens de resposta
 ```
 
 ### Por que o protocolo de ferramentas é via texto?
-O `opencode serve` expõe a session API (`POST /session/:id/message`), não um endpoint com `tools` nativos. Para o modelo chamar as funções de negócio, o system prompt instrui a resposta com um envelope JSON marcado (`===TOOL===` / `===END===`). O `agent.js` executa a ferramenta localmente e realimenta a mesma sessão com o resultado. Cada cliente tem **uma sessão** no opencode (a thread fica no servidor) e **um registro** na tabela `clientes` (resumo persistido).
+
+O `opencode serve` expõe a session API (`POST /session/:id/message`), **sem** `tools` nativos. A solução: o prompt instrui o modelo a responder com um envelope JSON marcado (`===TOOL===` / `===END===`); o `agent.js` executa a ferramenta no próprio processo e realimenta a mesma sessão com o resultado. Cada cliente tem **uma sessão** no opencode e **um registro** na tabela `clientes`.
+
+### Nota sobre o transporte do WhatsApp
+
+O envio/recebimento usa a lib **Baileys** diretamente (socket próprio, sessão em `.sessions/`). É funcional e auto-contido, mas **não é exatamente o padrão de mercado** — boa parte das integrações brasileiras usa a **Evolution API** (o mesmo Baileys por trás de uma API REST + webhooks).
+
+> [!WARNING]
+> **Evolução futura:** a doc pode passar a referenciar a **Evolution API** como camada de WhatsApp — [doc de referência](https://doc.evolution-api.com/). Para rodar/evoluir o projeto, você também pode **pedir auxílio ao próprio opencode** (a IA deste projeto), que conhece o código e as melhores práticas de deploy.
 
 ---
 
-## Pré-requisitos
+## <a id="como-rodar"></a> ⚙️ Como rodar
 
-- **Node.js ≥ 20** (testado com 24.x)
-- **CLI do opencode** instalado e no PATH (`opencode --version`)
+O projeto precisa de **2 processos rodando ao mesmo tempo** (IA + bot), em **2 terminais** (terminais 3 e 4 são opcionais: painel admin e chat web).
 
-## Como rodar
+| Passo | O quê | Comando |
+|---|---|---|
+| **0** · 1ª vez | Instalar a CLI do opencode | `npm install -g opencode-ai` → `opencode --version` |
+| **1** | Instalar dependências do projeto | `npm install` |
+| **2** | Criar o `.env` | `copy .env.example .env` (Windows) · `cp .env.example .env` (Linux/Mac) |
 
-**1. Instalar dependências:**
+> [!TIP]
+> Depois de criar o `.env`, edite o que quiser (`NOTIF_*`, `ADMIN_TOKEN`…). Os padrões já funcionam para testes.
+
+**3 · Terminal A — subir a IA local (deixe este terminal aberto):**
 
 ```bash
-npm install
+npm run serve            # opencode serve na porta 4096
 ```
 
-**2. Subir o opencode server (em um terminal):**
+Com senha (recomendado em rede compartilhada):
 
-```bash
-npm run serve
-```
-
-Recomendado proteger com senha:
 ```bash
 OPENCODE_SERVER_PASSWORD=uma-senha npm run serve
-# e defina o mesmo valor em OPENCODE_SERVER_PASSWORD no .env
+# e coloque o MESMO valor em OPENCODE_SERVER_PASSWORD no .env
 ```
 
-**3. Copiar e preencher o `.env`:**
-
-```bash
-copy .env.example .env
-```
-
-**4. (Opcional) Testar a IA local antes de tudo:**
+**4 · Smoke test (opcional) — conferir a IA:**
 
 ```bash
 npm run test:llm
 ```
 
-**5. Iniciar o bot e escanear o QR Code com o WhatsApp do Igor:**
+**5 · Terminal B — iniciar o bot do WhatsApp:**
 
 ```bash
 npm start
 ```
 
-O QR aparece no terminal. Depois da primeira conexão, a sessão fica salva em `.sessions` (não precisa escanear de novo).
+- Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do Igor (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho).
+- Depois, a sessão fica salva em `.sessions` e **não precisa escanear de novo**.
+- O bot gera e limpa a agenda sozinho (start + a cada 12h) — não precisa rodar `npm run seed`.
 
-> **Agendamento:** o bot gera e limpa os horários automaticamente no start e a cada 12h (ver `src/db/autoSeed.js`). Não é preciso rodar `npm run seed` manualmente, mas o script continua disponível.
+**6 · (Opcional) Terminal C — painel admin:**
+
+```bash
+npm run admin   # abra http://127.0.0.1:3000
+```
+
+> [!TIP]
+> Alterações no painel valem **imediatamente**, sem reiniciar o bot.
+
+**7 · (Opcional) Terminal D — chat web (portfólio):**
+
+```bash
+npm run web     # abra http://127.0.0.1:4000
+```
+
+Mesmo agente do WhatsApp, em uma página de chat no navegador — sem boas-vindas, só a conversa. (ver [chat-web.md](docs/features/chat-web.md))
+
+### Como saber se está tudo de pé
+
+| Log do bot | Significado |
+|---|---|
+| `[whatsapp] Conectado e pronto para atender 24/7.` | WhatsApp conectado ✅ |
+| `[llm] opencode server OK (v1.x)` | IA no ar e respondendo ✅ |
+| `[seed] N horários livres gerados/atualizados.` | Agenda preenchida ✅ |
+
+> [!NOTE]
+> Se a IA cair, o bot continua no WhatsApp mas responde "não consegui responder 😅". Basta subir o `npm run serve` de novo — sem reiniciar o bot.
 
 ---
 
-## Banco de Dados
+## <a id="banco-de-dados"></a> 🗄️ Banco de Dados
 
-SQLite via `better-sqlite3` (zero infraestrutura), caminho padrão `./data/agent.db`. Schema em `src/db/schema.js`.
+SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Schema em `src/db/schema.js`.
 
-- **`clientes`** — telefone (pk), nome, resumo da última interação (memória de longo prazo), timestamps.
-- **`agenda`** — slots de reunião com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Marca cliente e motivo quando agendado. Slots `livre` passados são limpos automaticamente.
-- **`servicos`** — catálogo editável manualmente: `nome`, `descricao`, `preco`, `ativo`, `ordem`. É a fonte da verdade que o LLM usa para apresentar serviços.
+- **`clientes`** — telefone (pk), nome, resumo (memória de longo prazo), timestamps.
+- **`agenda`** — slots com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Slots livres passados são limpos automaticamente.
+- **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria** (ex: Design Gráfico, Engenharia, Montagem e Hardware…). O campo `preco` (se existir) **não** é lido nem repassado — valores só saem com o Igor. Edite sem SQL via `npm run admin`.
 
 ---
 
-## Configuração (`.env`)
+## <a id="configuracao"></a> 🔧 Configuração (.env)
 
-Veja o `.env.example` completo. Principais variáveis:
+Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
@@ -134,37 +220,67 @@ Veja o `.env.example` completo. Principais variáveis:
 | `IMAGENS_ATIVO` | `false` | Habilita envio de imagens/GIFs ao cliente. |
 | `WELCOME_IMAGE` / `WELCOME_TEXT` / `WELCOME_INACTIVE_HORAS` | `boasvindas_gif` / texto / `24` | Boas-vindas. |
 | `KEEP_MESSAGES` / `SUMMARIZE_EVERY` | `12` / `5` | Histórico volátil e frequência do resumo persistente. |
+| `ADMIN_PORT` / `ADMIN_TOKEN` | `3000` / vazio | Porta e token do painel admin. |
+| `WEB_HOST` / `WEB_PORT` | `127.0.0.1` / `4000` | Onde fica o chat web (página + API). |
 
 ---
 
-## Imagens / GIFs
-
-Quando `IMAGENS_ATIVO=true`, o bot pode enviar ao cliente imagens/GIFs catalogados em `assets/imagens/manifest.json`:
-
-```json
-{
-  "logo_igor":          { "arquivo": "logo.png",               "descricao": "Logo do Igor Dev" },
-  "catalogo_servicos":  { "arquivo": "catalogo-servicos.png",  "descricao": "Tabela de serviços e preços" },
-  "boasvindas_gif":     { "arquivo": "boasvindas.gif",         "descricao": "GIF de boas-vindas" }
-}
-```
-
-O LLM escolhe o apelido e o serviço localiza o arquivo (`.png`/`.jpg`/`.gif`) e envia via WhatsApp. O GIF é enviado como vídeo com `gifPlayback: true`.
-
----
-
-## Comandos
+## <a id="comandos"></a> 🧰 Comandos
 
 | Comando | Ação |
 |---|---|
 | `npm run serve` | Sobe o opencode server (:4096) — outra janela |
 | `npm start` | Inicia o bot do WhatsApp |
 | `npm run dev` | Inicia com watch |
-| `npm run seed` | Gera horários livres na agenda (manual, o bot já auto-seeda) |
+| `npm run admin` | Painel web (CRUD de serviços) em http://127.0.0.1:3000 |
+| `npm run web` | Chat web em http://127.0.0.1:4000 |
+| `npm run seed` | Gera horários livres na agenda (manual — o bot já auto-seeda) |
 | `npm run test:llm` | Smoke test da IA local |
 
 ---
 
-## Aviso de privacidade
+## <a id="dependencias"></a> 🛠️ Dependências
 
-O modelo **`big-pickle` é gratuito**, mas durante o período free as interações podem ser usadas para melhorar o modelo. Para dados sensíveis de clientes em produção, prefira um modelo pago com zero-retention ou um modelo local de verdade (ex: Ollama).
+**5 dependências diretas** (transitivas ficam sob responsabilidade do `npm`):
+
+| Pacote | Para quê | Documentação |
+|---|---|---|
+| [`@whiskeysockets/baileys`](https://github.com/WhiskeySockets/Baileys) | Conexão com o WhatsApp (socket, sessão) | [GitHub + Wiki](https://github.com/WhiskeySockets/Baileys/wiki) · [Getting Started](https://github.com/WhiskeySockets/Baileys/wiki/Getting-Started) |
+| [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) | Banco de dados local (SQLite) | [GitHub](https://github.com/WiseLibs/better-sqlite3) · [API completa](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md) |
+| [`dotenv`](https://github.com/motdotla/dotenv) | Variáveis de ambiente do `.env` | [GitHub + usage](https://github.com/motdotla/dotenv?tab=readme-ov-file#usage) |
+| [`nodemailer`](https://nodemailer.com/) | Emails de notificação ao Igor | [**nodemailer.com**](https://nodemailer.com/) · [API](https://nodemailer.com/message/) |
+| [`qrcode-terminal`](https://github.com/gtanner/qrcode-terminal) | QR Code de login no terminal | [GitHub](https://github.com/gtanner/qrcode-terminal) |
+
+**Dependência global (fora do projeto):**
+
+| Pacote | Instalação | Para quê | Documentação |
+|---|---|---|---|
+| [`opencode`](https://opencode.ai) | `npm install -g opencode-ai` | CLI de IA — roda o servidor local (`:4096`) que é o cérebro do bot | [**opencode.ai/docs**](https://opencode.ai/docs) · [npm](https://www.npmjs.com/package/opencode-ai) |
+
+> [!NOTE]
+> Em uma máquina limpa, basta `npm install` (diretas + transitivas) e `npm install -g opencode-ai`. Nenhuma API paga é necessária.
+
+---
+
+## <a id="documentacao"></a> 📚 Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| 📇 [`docs/FEATURES.md`](docs/FEATURES.md) | Índice de **todas** as funcionalidades (núcleo + features) |
+| 🎯 [`docs/features/agente-ia.md`](docs/features/agente-ia.md) | O núcleo: loop de raciocínio, ferramentas, guardrails |
+| 📅 [`docs/features/agendamento.md`](docs/features/agendamento.md) | Agenda inteligente |
+| 🧠 [`docs/features/memoria.md`](docs/features/memoria.md) | Memória de longo prazo |
+| 🔔 [`docs/features/notificacoes.md`](docs/features/notificacoes.md) | Notificações (WhatsApp/email/emergência) |
+| 🖼️ [`docs/features/imagens.md`](docs/features/imagens.md) | Imagens/GIFs |
+| 🛠️ [`docs/features/painel-admin.md`](docs/features/painel-admin.md) | Painel CRUD de serviços |
+| 💬 [`docs/features/chat-web.md`](docs/features/chat-web.md) | Chat web (página + API para o portfólio) |
+| 🧙 [`docs/OPERACAO.md`](docs/OPERACAO.md) | Guia do operador (subir/parar/logs/troubleshooting) |
+| 🎚️ [`docs/AJUSTES.md`](docs/AJUSTES.md) | Ajustes rápidos sem código |
+| 📧 [`docs/SMTP.md`](docs/SMTP.md) | Senha de app do Gmail |
+
+---
+
+## <a id="privacidade"></a> 🔒 Aviso de privacidade
+
+> [!WARNING]
+> O modelo **`big-pickle` é gratuito**, mas durante o período free as interações podem ser usadas para melhorar o modelo. Para dados sensíveis de clientes em produção, prefira um modelo pago com zero-retention ou um modelo local de verdade (ex: Ollama).

@@ -35,11 +35,13 @@ CREATE INDEX IF NOT EXISTS idx_agenda_cliente ON agenda (cliente_telefone);
 -- ============================================================================
 -- Serviços oferecidos pelo Igor (catálogo editável manualmente)
 -- ativo=0 esconde o serviço sem apagar; ordem controla a exibição.
+-- categoria agrupa os serviços para o bot apresentar de forma organizada.
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS servicos (
   id          INTEGER PRIMARY KEY AUTOINCREMENT,
   nome        TEXT NOT NULL,
   descricao   TEXT NOT NULL DEFAULT '',
+  categoria   TEXT NOT NULL DEFAULT '',
   preco       TEXT,
   ativo       INTEGER NOT NULL DEFAULT 1,
   ordem       INTEGER NOT NULL DEFAULT 0,

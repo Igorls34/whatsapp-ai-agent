@@ -2,6 +2,8 @@
 
 Como rodar, parar e acompanhar o bot no dia a dia.
 
+> Índice de funcionalidades (cada uma com página dedicada): [FEATURES.md](FEATURES.md)
+
 ## Termos
 
 - **Bot** — o processo Node que conecta no WhatsApp da empresa e responde os clientes. Roda com `npm start`.
@@ -40,10 +42,11 @@ npm start
 ## Ver os logs
 
 - **Terminal do bot** — mensagens recebidas/enviadas (`[msg]...`), boas-vindas (`[welcome]...`), agendamentos (`[notif]...`), erros de LLM (`[llm]...`).
-- Se rodar redirecionando para um arquivo:
+- Rodando em segundo plano, os logs são gravados na pasta **`logs/`** (`bot.log`, `admin.log`, `opencode-serve.log`).
+- Para rodar redirecionando para um arquivo:
 
 ```bash
-npm start > bot.log 2>&1
+npm start > logs\bot.log 2>&1
 ```
 
 ## Problemas comuns

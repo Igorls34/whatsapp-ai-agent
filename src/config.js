@@ -119,4 +119,17 @@ export const config = {
     // Cliente que não interage há esse tempo (horas) recebe boas-vindas de novo
     inativoHoras: Number(process.env.WELCOME_INACTIVE_HORAS || 24),
   },
+
+  // Painel admin (CRUD de serviços) — servidor HTTP simples local
+  admin: {
+    port: Number(process.env.ADMIN_PORT || 3000),
+    // Se preenchido, o painel exige autenticação (token): envie "Authorization: Bearer TOKEN"
+    token: process.env.ADMIN_TOKEN || '',
+  },
+
+  // Chat web (portfólio): página + API para conversar com o mesmo agente
+  web: {
+    host: process.env.WEB_HOST || '127.0.0.1',
+    port: Number(process.env.WEB_PORT || 4000),
+  },
 };

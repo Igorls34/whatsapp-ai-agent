@@ -78,11 +78,49 @@ export function createRepositories(db) {
     `),
 
     listarServicos: db.prepare(`
-      SELECT id, nome, descricao, preco, ativo, ordem
+      SELECT id, nome, descricao, categoria, ativo, ordem
       FROM servicos
       WHERE ativo = 1
       ORDER BY ordem, nome
     `),
+
+    listarCategorias: db.prepare(`
+      SELECT DISTINCT categoria FROM servicos
+      WHERE ativo = 1 AND categoria != ''
+      ORDER BY categoria
+    `),
+
+    // --- Painel admin (CRUD): todos os serviços, inclusive inativos ---
+
+    listarServicosAdmin: db.prepare(`
+      SELECT id, nome, descricao, categoria, ativo, ordem, criado_em, atualizado_em
+      FROM servicos
+      ORDER BY ordem, nome
+    `),
+
+    getServico: db.prepare(`
+      SELECT id, nome, descricao, categoria, ativo, ordem
+      FROM servicos
+      WHERE id = ?
+    `),
+
+    inserirServico: db.prepare(`
+      INSERT INTO servicos (nome, descricao, categoria, ativo, ordem)
+      VALUES (@nome, @descricao, @categoria, @ativo, @ordem)
+    `),
+
+    atualizarServico: db.prepare(`
+      UPDATE servicos
+      SET nome = @nome,
+          descricao = @descricao,
+          categoria = @categoria,
+          ativo = @ativo,
+          ordem = @ordem,
+          atualizado_em = datetime('now', 'localtime')
+      WHERE id = @id
+    `),
+
+    excluirServico: db.prepare(`DELETE FROM servicos WHERE id = ?`),
   };
 
   return {
@@ -144,6 +182,30 @@ export function createRepositories(db) {
 
     listarServicosAtivos() {
       return stmts.listarServicos.all();
+    },
+
+    // --- Serviços (painel admin) ---
+
+    listarServicosAdmin() {
+      return stmts.listarServicosAdmin.all();
+    },
+
+    listarCategorias() {
+      return stmts.listarCategorias.all().map((r) => r.categoria);
+    },
+
+    criarServico({ nome, descricao = '', categoria = '', ativo = 1, ordem = 0 }) {
+      const info = stmts.inserirServico.run({ nome, descricao, categoria, ativo, ordem });
+      return stmts.getServico.get(info.lastInsertRowid) || null;
+    },
+
+    atualizarServico({ id, nome, descricao, categoria, ativo, ordem }) {
+      const info = stmts.atualizarServico.run({ id, nome, descricao, categoria, ativo, ordem });
+      return info.changes ? stmts.getServico.get(id) || null : null;
+    },
+
+    excluirServico(id) {
+      return stmts.excluirServico.run(id).changes > 0;
     },
   };
 }
