@@ -57,6 +57,8 @@
 
     .table thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-top: none; }
     .table td { vertical-align: middle; }
+    .agenda-dia-header td { background: #f8fafc; font-weight: 700; color: var(--ink); font-size: .88rem; border-bottom: 2px solid #e5e7eb; }
+    .agenda-dia-header:hover td { background: #f8fafc; }
 
     td.cliente em { display: block; color: var(--muted); font-size: .78rem; font-style: normal; }
     td.motivo-td { color: var(--muted); font-size: .86rem; max-width: 260px; }
@@ -260,7 +262,6 @@
       window.scrollTo(0, 0);
     }
     window.addEventListener('hashchange', rotear);
-    rotear();
 
     // ---- Helpers ----
     const esc = (s) =>
@@ -449,6 +450,20 @@
     const STATUS_LABEL = { agendado: 'Agendado', confirmada: 'Confirmada', cancelada: 'Cancelada', livre: 'Livre' };
     const STATUS_BADGE = { agendado: 'b-agendado', confirmada: 'b-confirmada', cancelada: 'b-cancelada', livre: 'b-livre' };
 
+    function formatarData(dataISO) {
+      const [y, m, d] = dataISO.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const hoje = new Date();
+      const hojeZero = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+      const diff = Math.round((dt - hojeZero) / 86400000);
+      const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const nomeDia = diasSemana[dt.getDay()];
+      const dataBr = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+      if (diff === 0) return `Hoje — ${nomeDia}, ${dataBr}`;
+      if (diff === 1) return `Amanhã — ${nomeDia}, ${dataBr}`;
+      return `${nomeDia}, ${dataBr}`;
+    }
+
     function preencherAgendaForm(a) {
       editandoAgendaId = a.id;
       document.getElementById('ag-data-hora').value = a.data_hora;
@@ -478,6 +493,39 @@
       const resto = agendaTodas.length - mostrar.length;
       const comCliente = mostrar.filter((a) => a.status !== 'livre');
       const filtro = filtroStatus;
+
+      // Agrupa por dia (YYYY-MM-DD) para exibir cabeçalho diário
+      const grupos = new Map();
+      for (const a of mostrar) {
+        const dia = (a.data_hora || '').slice(0, 10);
+        if (!grupos.has(dia)) grupos.set(dia, []);
+        grupos.get(dia).push(a);
+      }
+
+      let rowsHtml = '';
+      for (const [dia, agends] of grupos) {
+        rowsHtml += `<tr class="agenda-dia-header"><td colspan="5">${esc(formatarData(dia))} <span class="fw-normal text-muted ms-1" style="font-size:.78rem;">(${agends.length})</span></td></tr>`;
+        for (const a of agends) {
+          const hora = (a.data_hora || '').slice(11, 16) || '??:??';
+          const isNovo = a.status === 'agendado';
+          rowsHtml += `
+            <tr>
+              <td class="fw-semibold text-nowrap">${esc(hora)}${isNovo ? ' <span class="badge badge-status b-agendado ms-1">novo</span>' : ''}</td>
+              <td class="cliente">
+                ${a.status === 'livre'
+                  ? '<span class="text-muted">—</span>'
+                  : `<strong>${esc(a.cliente_nome || 'Sem nome')}</strong><em>${esc(a.cliente_telefone)}</em>`}
+              </td>
+              <td class="motivo-td">${a.motivo ? esc(a.motivo) : '—'}</td>
+              <td><span class="badge badge-status ${STATUS_BADGE[a.status] || 'text-bg-light'}">${STATUS_LABEL[a.status] || esc(a.status)}</span></td>
+              <td>
+                <button class="btn btn-sm btn-outline-primary" onclick="editarAgenda(${a.id})">Editar</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="excluirAgenda(${a.id})">Excluir</button>
+              </td>
+            </tr>`;
+        }
+      }
+
       agendaListaEl.innerHTML = `
         <div class="text-muted px-3 pt-3" style="font-size:.82rem;">
           ${agendaTodas.length} registro(s)${filtro !== 'todos' ? ` · filtro: ${STATUS_LABEL[filtro] || filtro}` : ''}
@@ -487,33 +535,14 @@
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th style="width:170px;">Data / hora</th>
+              <th style="width:110px;">Hora</th>
               <th>Cliente</th>
               <th>Motivo</th>
               <th style="width:110px;">Status</th>
               <th style="width:150px;">Ações</th>
             </tr>
           </thead>
-          <tbody>
-            ${mostrar.map((a) => `
-              <tr>
-                <td class="fw-semibold text-nowrap">
-                  ${esc(a.data_hora)}
-                  ${a.status === 'agendado' ? '<span class="badge badge-status b-agendado ms-1">novo</span>' : ''}
-                </td>
-                <td class="cliente">
-                  ${a.status === 'livre'
-                    ? '<span class="text-muted">—</span>'
-                    : `<strong>${esc(a.cliente_nome || 'Sem nome')}</strong><em>${esc(a.cliente_telefone)}</em>`}
-                </td>
-                <td class="motivo-td">${a.motivo ? esc(a.motivo) : '—'}</td>
-                <td><span class="badge badge-status ${STATUS_BADGE[a.status] || 'text-bg-light'}">${STATUS_LABEL[a.status] || esc(a.status)}</span></td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary" onclick="editarAgenda(${a.id})">Editar</button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="excluirAgenda(${a.id})">Excluir</button>
-                </td>
-              </tr>`).join('')}
-          </tbody>
+          <tbody>${rowsHtml}</tbody>
         </table>`}
         ${resto > 0 ? `
           <div class="text-center p-2 card-footer-bar">
@@ -603,6 +632,7 @@
     // ---- Início: serviços imediatos; agenda sob demanda ----
     carregarCategorias();
     carregarLista();
+    rotear();
   </script>
 </body>
 </html>
