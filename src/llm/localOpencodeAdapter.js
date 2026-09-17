@@ -1,4 +1,9 @@
 import { config } from '../config.js';
+import { createSemaphore } from '../services/backpressure.js';
+
+// Semáforo global do processo: limita o número de turnos de IA rodando em
+// paralelo (bot e web somados) para não estourar o opencode serve local.
+const semaforoGlobal = createSemaphore(config.limites.llmMaxConcurrent);
 
 // Adapter que usa o próprio opencode como IA, via o servidor headless local:
 //
@@ -32,20 +37,31 @@ export function createLocalOpencodeAdapter(overrides = {}) {
 
   // Mapa telefone -> sessão do opencode + fila para não sobrepor turnos do mesmo cliente.
   const sessions = new Map();
+  const MAX_SESSOES = 300;
 
   async function request(path, { method = 'GET', body } = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), config.limites.llmTimeoutMs);
     let res;
     try {
       res = await fetch(`${base}${path}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : undefined,
+        signal: controller.signal,
       });
     } catch (err) {
+      if (controller.signal.aborted) {
+        const e = new Error(`opencode server não respondeu em ${config.limites.llmTimeoutMs}ms — operação cancelada`);
+        e.code = 'LLM_TIMEOUT';
+        throw e;
+      }
       throw new Error(
         `Não consegui falar com o opencode server em ${base}. ` +
           `Rode "opencode serve --port 4096" em outro terminal. (detalhe: ${err.message})`
       );
+    } finally {
+      clearTimeout(timer);
     }
 
     if (res.status < 200 || res.status >= 300) {
@@ -53,6 +69,23 @@ export function createLocalOpencodeAdapter(overrides = {}) {
       throw new Error(`opencode server respondeu HTTP ${res.status}: ${text.slice(0, 300)}`);
     }
     return res.json();
+  }
+
+  // Poda lazily: acima de MAX_SESSOES, descarta as ociosas (> 24h) e, se
+  // necessário, as mais antigas. Evita vazamento de memória com clientes únicos.
+  function podarSessoes() {
+    if (sessions.size <= MAX_SESSOES) return;
+    const agora = Date.now();
+    for (const [k, e] of [...sessions.entries()]) {
+      if (sessions.size <= MAX_SESSOES) break;
+      if (agora - (e.lastUsed || 0) > 24 * 3600000) sessions.delete(k);
+    }
+    if (sessions.size <= MAX_SESSOES) return;
+    const maisAntigas = [...sessions.entries()].sort((a, b) => (a[1].lastUsed || 0) - (b[1].lastUsed || 0));
+    for (const [k] of maisAntigas) {
+      if (sessions.size <= 200) break;
+      sessions.delete(k);
+    }
   }
 
   function lock(sessionKey) {
@@ -94,13 +127,16 @@ export function createLocalOpencodeAdapter(overrides = {}) {
     // Garante uma sessão do opencode para o cliente (alvo: telefone).
     async ensureSession(sessionKey) {
       if (!sessions.has(sessionKey)) {
+        podarSessoes();
         const session = await request('/session', {
           method: 'POST',
           body: { title: `whatsapp-agent:${sessionKey}` },
         });
-        sessions.set(sessionKey, { id: session.id, tail: Promise.resolve() });
+        sessions.set(sessionKey, { id: session.id, tail: Promise.resolve(), lastUsed: Date.now() });
       }
-      return sessions.get(sessionKey).id;
+      const entry = sessions.get(sessionKey);
+      entry.lastUsed = Date.now();
+      return entry.id;
     },
 
     async existsSession(sessionKey) {
@@ -111,15 +147,24 @@ export function createLocalOpencodeAdapter(overrides = {}) {
     async runTurn({ sessionKey, system, text }) {
       const id = await this.ensureSession(sessionKey);
       return runLocked(sessionKey, async () => {
-        const data = await request(`/session/${id}/message`, {
-          method: 'POST',
-          body: {
-            parts: [{ type: 'text', text }],
-            system,
-            ...(model ? { model } : {}),
-          },
-        });
-        return extractReply(data.parts);
+        try {
+          return await semaforoGlobal.run(async () => {
+            const data = await request(`/session/${id}/message`, {
+              method: 'POST',
+              body: {
+                parts: [{ type: 'text', text }],
+                system,
+                ...(model ? { model } : {}),
+              },
+            });
+            return extractReply(data.parts);
+          });
+        } catch (err) {
+          // Timeout da IA: descarta a sessão para o próximo turno não herdar
+          // uma fila/vínculo preso naquela conversa.
+          if (err?.code === 'LLM_TIMEOUT') this.clearSession(sessionKey);
+          throw err;
+        }
       });
     },
 
@@ -127,15 +172,17 @@ export function createLocalOpencodeAdapter(overrides = {}) {
     async complete({ system, text, title = 'whatsapp-agent:aux' }) {
       const session = await request('/session', { method: 'POST', body: { title } });
       try {
-        const data = await request(`/session/${session.id}/message`, {
-          method: 'POST',
-          body: {
-            parts: [{ type: 'text', text }],
-            system,
-            ...(model ? { model } : {}),
-          },
+        return await semaforoGlobal.run(async () => {
+          const data = await request(`/session/${session.id}/message`, {
+            method: 'POST',
+            body: {
+              parts: [{ type: 'text', text }],
+              system,
+              ...(model ? { model } : {}),
+            },
+          });
+          return extractReply(data.parts);
         });
-        return extractReply(data.parts);
       } finally {
         await request(`/session/${session.id}`, { method: 'DELETE' }).catch(() => {});
       }

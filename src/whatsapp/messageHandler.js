@@ -4,6 +4,8 @@
 // 3. Envia a resposta gerada via WhatsApp (podem ser várias mensagens com |||)
 // 4. Periodicamente, gera o novo resumo da interação e grava no banco
 
+import { createSendPacer } from '../services/backpressure.js';
+
 // Separa respostas em múltiplas mensagens (|||) para ficar natural no WhatsApp
 export const MSG_SEPARATOR = '|||';
 const MSG_DELAY_MS = 1500;
@@ -13,7 +15,7 @@ function sleep(ms) {
 }
 
 // Envia uma resposta (possivelmente dividida em várias mensagens) ao cliente
-async function enviarResposta(socket, remoteJid, telefone, reply, memory) {
+async function enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory) {
   const partes = String(reply)
     .split(MSG_SEPARATOR)
     .map((p) => p.trim())
@@ -25,7 +27,7 @@ async function enviarResposta(socket, remoteJid, telefone, reply, memory) {
   }
 
   for (let i = 0; i < partes.length; i++) {
-    await socket.sendMessage(remoteJid, { text: partes[i] });
+    await sendPacer.run(() => socket.sendMessage(remoteJid, { text: partes[i] }));
     try {
       memory.add(telefone, 'assistant', partes[i]);
     } catch (err) {
@@ -36,7 +38,8 @@ async function enviarResposta(socket, remoteJid, telefone, reply, memory) {
   }
 }
 
-export function createMessageHandler({ repos, getSocket, agent, summarizer, memory, imageService, config }) {
+export function createMessageHandler({ repos, getSocket, agent, summarizer, memory, imageService, config, pacer }) {
+  const sendPacer = pacer || createSendPacer({ minGapMs: config.limites.envioMinGapMs });
 
   // Cliente que não interagiu nos últimos N horas é tratado como "novo" (recebe boas-vindas).
   function clienteInativo(cliente, horas) {
@@ -69,7 +72,7 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     // entende texto no momento; avisa e pede pra digitar a demanda.
     if (midia && socket) {
       const aviso = `Agora só consigo ler mensagens de texto por aqui 🙏. Pode digitar sua demanda pra mim? Assim o Igor já sabe como te ajudar, tudo bem? 😊`;
-      await socket.sendMessage(remoteJid, { text: aviso });
+      await sendPacer.run(() => socket.sendMessage(remoteJid, { text: aviso }));
       try {
         memory.add(telefone, 'assistant', aviso);
       } catch (err) {
@@ -108,10 +111,10 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
           console.log(`[welcome] material enviado a ${telefone}: ${resultado.imagem_enviada}`);
         } else {
           console.warn(`[welcome] sem material (${resultado.motivo}) — enviando só texto`);
-          await socket.sendMessage(remoteJid, { text: config.welcomes.texto });
+          await sendPacer.run(() => socket.sendMessage(remoteJid, { text: config.welcomes.texto }));
         }
       } else {
-        await socket.sendMessage(remoteJid, { text: config.welcomes.texto });
+        await sendPacer.run(() => socket.sendMessage(remoteJid, { text: config.welcomes.texto }));
         console.log(`[welcome] texto de boas-vindas enviado a ${telefone}`);
       }
       memory.add(telefone, 'assistant', config.welcomes.texto);
@@ -133,7 +136,7 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     }
 
     if (reply && socket) {
-      await enviarResposta(socket, remoteJid, telefone, reply, memory);
+      await enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory);
     } else {
       console.warn('[msg] resposta vazia ou socket indisponível — nada enviado');
     }

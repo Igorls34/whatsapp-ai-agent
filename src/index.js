@@ -11,6 +11,7 @@ import { createImageService } from './services/imageService.js';
 import { gerarSlots, limparSlotsPassados } from './db/autoSeed.js';
 import { createMessageHandler } from './whatsapp/messageHandler.js';
 import { connectWhatsApp } from './whatsapp/client.js';
+import { createSendPacer } from './services/backpressure.js';
 
 function main() {
   const db = openDatabase(config.dbPath);
@@ -55,19 +56,35 @@ function main() {
   const imageService = createImageService({ getSocket, config });
 
   // Entrega avisos enfileirados por processos sem WhatsApp (chat web/painel):
-  // agendamentos, emergências etc. Verifica a cada 30s.
+  // agendamentos, emergências etc. Verifica a cada 30s. Cada aviso é tratado
+  // individualmente: um erro em um deles não bloqueia os demais (sem
+  // cabeça-de-linha); após 5 tentativas sem sucesso o aviso é descartado.
+  const pacer = createSendPacer({ minGapMs: config.limites.envioMinGapMs });
+  const tentativasAviso = new Map();
+  const MAX_TENTATIVAS_AVISO = 5;
+
   const drenarAvisosPendentes = async () => {
     const socket = getSocket();
     const numero = config.notificacoes?.whatsapp;
     if (!socket || !numero) return;
-    try {
-      for (const aviso of repos.listarAvisosPendentes()) {
-        await socket.sendMessage(`${numero}@s.whatsapp.net`, { text: aviso.texto });
+    for (const aviso of repos.listarAvisosPendentes()) {
+      try {
+        await pacer.run(() => socket.sendMessage(`${numero}@s.whatsapp.net`, { text: aviso.texto }));
         repos.removerAviso(aviso.id);
+        tentativasAviso.delete(aviso.id);
         console.log(`[notif] aviso entregue via WhatsApp: ${aviso.texto.slice(0, 90)}`);
+      } catch (err) {
+        const atual = (tentativasAviso.get(aviso.id) || 0) + 1;
+        const msg = String(err?.message || err).slice(0, 150);
+        if (atual >= MAX_TENTATIVAS_AVISO) {
+          tentativasAviso.delete(aviso.id);
+          repos.removerAviso(aviso.id);
+          console.error(`[notif] aviso ${aviso.id} removido após ${atual} tentativas sem sucesso: ${msg}`);
+        } else {
+          tentativasAviso.set(aviso.id, atual);
+          console.error(`[notif] aviso ${aviso.id} falhou (${atual}/${MAX_TENTATIVAS_AVISO}), mantido: ${msg}`);
+        }
       }
-    } catch (err) {
-      console.error('[notif] falha ao drenar avisos pendentes:', err.message);
     }
   };
   setInterval(drenarAvisosPendentes, 30 * 1000);
@@ -80,6 +97,7 @@ function main() {
     memory,
     imageService,
     config,
+    pacer,
   });
 
   connectWhatsApp({

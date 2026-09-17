@@ -17,6 +17,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PAGINA_PATH = path.join(__dirname, 'index.html');
 const MAX_RESP_TOKENS = 1500;
 const LIMITE_MSGS_POR_MINUTO = 12;
+// Respostas atendendo simultaneamente (teto anti-gargalo para o LLM local)
+let atendimentosEmCurso = 0;
 
 // ---------------------------------------------------------------------------
 // Setup: mesmos componentes do bot do WhatsApp, sem o transporte Baileys.
@@ -60,6 +62,13 @@ function liberal(sessionId) {
   const v = (janelas.get(sessionId) || []).filter((t) => agora - t < 60000);
   v.push(agora);
   janelas.set(sessionId, v);
+  // Poda: ao crescer demais, descarta sessões ociosas (> 10min sem mensagem)
+  if (janelas.size > 500) {
+    for (const [k, arr] of [...janelas.entries()]) {
+      if (janelas.size <= 500) break;
+      if (agora - (arr[arr.length - 1] || 0) > 10 * 60000) janelas.delete(k);
+    }
+  }
   return v.length <= LIMITE_MSGS_POR_MINUTO;
 }
 
@@ -241,7 +250,30 @@ const server = http.createServer(async (req, res) => {
         return json(res, 429, { ok: false, erro: 'Você está enviando rápido demais. Aguarde um instante e tente de novo. 😊' });
       }
 
-      const resultado = await responder({ sessionId, mensagem });
+      // Teto de concorrência: evita que muitas sessões estourem o LLM local.
+      if (atendimentosEmCurso >= config.limites.webMaxConcurrent) {
+        return json(res, 503, {
+          ok: false,
+          erro: 'Muito movimento agora 😅. Espera um instante e tenta de novo — o assistente já atende.',
+        });
+      }
+
+      atendimentosEmCurso += 1;
+      let resultado;
+      try {
+        resultado = await Promise.race([
+          responder({ sessionId, mensagem }),
+          new Promise((_, rejeitar) =>
+            setTimeout(() => rejeitar(Object.assign(new Error('timeout'), { code: 'WEB_TIMEOUT' })), config.limites.webTimeoutMs)),
+        ]);
+      } catch (err) {
+        if (err?.code === 'WEB_TIMEOUT') {
+          return json(res, 503, { ok: false, erro: 'Estou demorando mais que o normal por aqui 😅. Pode repetir em instantes.' });
+        }
+        throw err;
+      } finally {
+        atendimentosEmCurso -= 1;
+      }
       resultado.ok = true;
       return json(res, 200, resultado);
     }

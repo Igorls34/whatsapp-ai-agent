@@ -132,4 +132,18 @@ export const config = {
     host: process.env.WEB_HOST || '127.0.0.1',
     port: Number(process.env.WEB_PORT || 4000),
   },
+
+  // Controle de gargalos (backpressure)
+  limites: {
+    // Quantas respostas de IA podem rodar em paralelo no mesmo processo
+    llmMaxConcurrent: Number(process.env.LLM_MAX_CONCURRENT || 3),
+    // Tempo máximo de um turno de IA antes de ser cancelado (ms)
+    llmTimeoutMs: Number(process.env.LLM_TIMEOUT_MS || 60000),
+    // Intervalo mínimo entre envios no WhatsApp (ms)
+    envioMinGapMs: Number(process.env.ENVIO_MIN_GAP_MS || 700),
+    // Respostas simultâneas máximas atendidas pelo chat web
+    webMaxConcurrent: Number(process.env.WEB_MAX_CONCURRENT || 3),
+    // Tempo máximo de um request do chat web antes de responder 503 (ms)
+    webTimeoutMs: Number(process.env.WEB_TIMEOUT_MS || 60000),
+  },
 };
