@@ -93,12 +93,10 @@
 
     <ul class="nav nav-tabs mb-4" role="tablist">
       <li class="nav-item" role="presentation">
-        <button type="button" class="nav-link active" id="tab-btn-servicos" role="tab"
-                data-target="tab-servicos">Serviços</button>
+        <a class="nav-link active" id="tab-btn-servicos" href="#/servicos">Serviços</a>
       </li>
       <li class="nav-item" role="presentation">
-        <button type="button" class="nav-link" id="tab-btn-agenda" role="tab"
-                data-target="tab-agenda">Agenda</button>
+        <a class="nav-link" id="tab-btn-agenda" href="#/agenda">Agenda</a>
       </li>
     </ul>
 
@@ -241,21 +239,28 @@
   </main>
 
   <script>
-    // ---- Tabs ("lazyload" de verdade: agenda só monta quando a aba abre) ----
-    const tabBtns = document.querySelectorAll('.nav-tabs .nav-link[data-target]');
+    // ---- Router SPA: navegação pelas rotas do cabeçalho (#/servicos, #/agenda) ----
+    // Agenda é lazy: só monta quando a rota abre pela primeira vez.
     let agendaCarregado = false;
 
-    function abrirAba(id) {
-      document.querySelectorAll('.nav-tabs .nav-link[data-target]').forEach((b) =>
-        b.classList.toggle('active', b.dataset.target === id));
-      document.querySelectorAll('.tab-pane').forEach((p) =>
-        p.classList.toggle('show', p.id === id) && p.classList.toggle('active', p.id === id));
+    function rotear() {
+      const hash = ['#/servicos', '#/agenda'].includes(location.hash) ? location.hash : '#/servicos';
+      const id = hash === '#/agenda' ? 'tab-agenda' : 'tab-servicos';
+      document.querySelectorAll('.nav-tabs .nav-link').forEach((b) =>
+        b.classList.toggle('active', b.getAttribute('href') === hash));
+      document.querySelectorAll('.tab-pane').forEach((p) => {
+        const ativo = p.id === id;
+        p.classList.toggle('show', ativo);
+        p.classList.toggle('active', ativo);
+      });
       if (id === 'tab-agenda' && !agendaCarregado) {
         agendaCarregado = true;
         carregarAgendamentos();
       }
+      window.scrollTo(0, 0);
     }
-    tabBtns.forEach((b) => b.addEventListener('click', () => abrirAba(b.dataset.target)));
+    window.addEventListener('hashchange', rotear);
+    rotear();
 
     // ---- Helpers ----
     const esc = (s) =>
