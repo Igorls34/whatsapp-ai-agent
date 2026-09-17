@@ -8,8 +8,8 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap.min.css" /></noscript>
   <style>
     :root {
-      --ink: #f9fafb;
-      --muted: #9ca3af;
+      --ink: #ffffff;
+      --muted: #c3c9d4;
       --line: #1f1f1f;
       --bg: #050505;
       --card: #0a0a0a;
@@ -74,10 +74,11 @@
 
     .table { color: var(--ink); --bs-table-bg: transparent; }
     .table thead th { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); border-top: none; border-bottom-color: var(--border-card); }
-    .table td { vertical-align: middle; border-color: var(--border-card); }
-    .table-hover tbody tr:hover td, .table-hover tbody tr:hover th { background: #141414; color: var(--ink); }
-    .agenda-dia-header td { background: #0f0f0f !important; font-weight: 700; color: var(--ink); font-size: .88rem; border-bottom: 2px solid var(--border-card); }
-    .agenda-dia-header:hover td { background: #0f0f0f !important; }
+    .table td { vertical-align: middle; border-color: var(--border-card); color: var(--ink); }
+    .table-hover tbody tr:hover td, .table-hover tbody tr:hover th { background: #161616; color: #fff; }
+    .table td .text-muted, .text-muted { color: #c9cfda !important; }
+    .agenda-dia-header td { background: #171717 !important; font-weight: 700; color: #fff; font-size: .88rem; border-bottom: 2px solid var(--border-card); }
+    .agenda-dia-header:hover td { background: #171717 !important; }
 
     .form-check-input { background-color: #111; border-color: #333; }
     .form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
