@@ -40,29 +40,54 @@ Regras:
 
 export const TOOL_PROTOCOL_SYSTEM_START = '## 5. Uso das Ferramentas';
 
+// Extrai o primeiro objeto JSON balanceado {...} de um texto, ignorando prosa.
+function extrairJsonBalanceado(candidato) {
+  let str = String(candidato || '').trim();
+  str = str.replace(/^```(?:json)?/i, '').replace(/\s*```\s*$/g, '').trim();
+  const inicio = str.indexOf('{');
+  if (inicio === -1) return str;
+  let depth = 0;
+  let emString = false;
+  for (let i = inicio; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '"' && str[i - 1] !== '\\') emString = !emString;
+    if (emString) continue;
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return str.slice(inicio, i + 1);
+    }
+  }
+  return str.slice(inicio);
+}
+
 export function parseToolEnvelope(text) {
   if (!text) return null;
 
   const quoted = (t) => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const regex = new RegExp(
-    `${quoted(TOOL_BEGIN)}\\s*([\\s\\S]*?)\\s*${quoted(TOOL_END)}`,
-    'i'
-  );
-  const match = text.match(regex) || text.match(/```(?:json)?\s*({[\s\S]*?})\s*```/);
+  const begin = quoted(TOOL_BEGIN);
+  const end = quoted(TOOL_END);
 
-  let json = match ? match[1] : text.trim();
-  json = json.replace(/^```(?:json)?|[`\s]*```$/g, '').trim();
+  // Formato canônico: ===TOOL=== ... ===END=== (ignora prosa antes/depois).
+  const completo = text.match(new RegExp(`${begin}\\s*([\\s\\S]*?)\\s*${end}`, 'i'));
+  // Tolerância: marcador de início sem ===END=== (modelo "esquece" de fechar).
+  const semFim = !completo && text.match(new RegExp(`${begin}\\s*([\\s\\S]*)$`, 'i'));
+  // Bloco de código com JSON (modelo usa markdown mesmo quando não é pra usar).
+  const fence = !completo && !semFim && text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
 
-  try {
-    const parsed = JSON.parse(json);
-    if (parsed && typeof parsed === 'object' && parsed.name) {
-      return {
-        name: parsed.name,
-        arguments: parsed.arguments && typeof parsed.arguments === 'object' ? parsed.arguments : {},
-      };
+  for (const grupo of [completo, semFim, fence]) {
+    if (!grupo) continue;
+    try {
+      const parsed = JSON.parse(extrairJsonBalanceado(grupo[1]));
+      if (parsed && typeof parsed === 'object' && parsed.name) {
+        return {
+          name: parsed.name,
+          arguments: parsed.arguments && typeof parsed.arguments === 'object' ? parsed.arguments : {},
+        };
+      }
+    } catch (err) {
+      // não é JSON válido: tenta o próximo candidato
     }
-  } catch (err) {
-    // não é JSON: segue como texto normal
   }
   return null;
 }

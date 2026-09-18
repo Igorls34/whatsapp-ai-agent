@@ -3,6 +3,8 @@ import {
   withToolProtocol,
   parseToolEnvelope,
   buildToolResultMessage,
+  TOOL_BEGIN,
+  TOOL_END,
 } from './toolProtocol.js';
 
 const MAX_ROUNDS = 6;
@@ -74,7 +76,14 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
       const call = parseToolEnvelope(reply);
 
       // Sem envelope de ferramenta: é a resposta final.
-      if (!call) return reply;
+      if (!call) {
+        // Rede de segurança: nunca deixa protocolo de ferramenta chegar ao cliente.
+        if (reply.includes(TOOL_BEGIN) || reply.includes(TOOL_END)) {
+          console.warn('[agent] resposta com marcador de ferramenta não interpretável — bloqueado');
+          return 'Estou com instabilidade agora 😅. Quer que eu chame o Igor pra te atender?';
+        }
+        return reply;
+      }
 
       // Executa a ferramenta localmente e realimenta o modelo com o resultado.
       const result = await runTool(call.name, { ...call.arguments, telefone });

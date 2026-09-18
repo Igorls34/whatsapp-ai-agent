@@ -14,12 +14,18 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Contaminação de protocolo: mensagens com marcador de ferramenta nunca vão ao cliente.
+function ehVazamentoProtocolo(texto) {
+  return texto.includes('===TOOL===') || texto.includes('===END===');
+}
+
 // Envia uma resposta (possivelmente dividida em várias mensagens) ao cliente
 async function enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory) {
   const partes = String(reply)
     .split(MSG_SEPARATOR)
     .map((p) => p.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((p) => !ehVazamentoProtocolo(p));
 
   if (partes.length === 0) {
     console.warn('[msg] resposta vazia — nada enviado');

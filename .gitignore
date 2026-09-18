@@ -4,6 +4,9 @@ node_modules/
 # Sessões do WhatsApp (não versionar credenciais)
 .sessions/
 .sessions-backup/
+.sessions-backup-*/
+# QR codes de pareamento (não versionar)
+qr/
 
 # Banco de dados local (dados de clientes e agenda)
 data/
