@@ -57,6 +57,7 @@ Implementadas **em cima do núcleo**, cada uma com página própria:
 | 🛠️ **Painel admin (CRUD)** | Página web + API REST para gerenciar os serviços sem SQL | [painel-admin.md](docs/features/painel-admin.md) |
 | 💬 **Chat Web** | Página de chat para conversar com o **mesmo agente** no navegador | [chat-web.md](docs/features/chat-web.md) |
 | 🛡️ **Controle de gargalos & bloqueio** | Semáforo/limites de LLM, timeout, envio espaçado, fila de avisos à prova de travamento e bloqueio de clientes abusivos | [backpressure.md](docs/features/backpressure.md) |
+| 📲 **Multi-canal (futuro)** | Plano para portar o agente (agnóstico de canal) para Instagram, SMS e outros | [multicanal.md](docs/features/multicanal.md) |
 
 > [!NOTE]
 > Índice completo com núcleo **e** features: **[docs/FEATURES.md](docs/FEATURES.md)**.
@@ -280,6 +281,7 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 | 🛠️ [`docs/features/painel-admin.md`](docs/features/painel-admin.md) | Painel CRUD de serviços |
 | 💬 [`docs/features/chat-web.md`](docs/features/chat-web.md) | Chat web (página + API para o portfólio) |
 | 🛡️ [`docs/features/backpressure.md`](docs/features/backpressure.md) | Controle de gargalos (limites de concorrência/timeout) + bloqueio por abuso |
+| 📲 [`docs/features/multicanal.md`](docs/features/multicanal.md) | Plano multi-canal (Instagram/SMS) e aviso sobre transporte não-oficial |
 | 🧙 [`docs/OPERACAO.md`](docs/OPERACAO.md) | Guia do operador (subir/parar/logs/troubleshooting) |
 | 🎚️ [`docs/AJUSTES.md`](docs/AJUSTES.md) | Ajustes rápidos sem código |
 | 📧 [`docs/SMTP.md`](docs/SMTP.md) | Senha de app do Gmail |
