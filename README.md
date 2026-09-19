@@ -130,7 +130,7 @@ O envio/recebimento usa a lib **Baileys** diretamente (socket próprio, sessão 
 | **2** | Configurar (wizard: identidade, agenda, notificações — instala o opencode se faltar) | `npm run setup` |
 | **3** | Ligar tudo (sobe a IA + o bot, e reinicia sozinho se cair) | `npm start` |
 
-Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do responsável (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho). Depois, a sessão fica salva em `.sessions` e **não precisa escanear de novo**.
+Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do Igor (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho). Depois, a sessão fica salva em `.sessions` e **não precisa escanear de novo**.
 
 > [!TIP]
 > O `npm start` é um **supervisor**: sobe o `opencode serve` (:4096) sozinho se ele não estiver no ar e **reinicia o bot** se ele cair. Quem preferir processos separados, veja abaixo o fluxo manual.
