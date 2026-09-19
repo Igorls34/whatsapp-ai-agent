@@ -274,6 +274,8 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 |---|---|
 | 📇 [`docs/FEATURES.md`](docs/FEATURES.md) | Índice de **todas** as funcionalidades (núcleo + features) |
 | 🎯 [`docs/features/agente-ia.md`](docs/features/agente-ia.md) | O núcleo: loop de raciocínio, ferramentas, guardrails |
+| 🧪 [`docs/AVALIACAO.md`](docs/AVALIACAO.md) | Como o assistente foi avaliado: casos de teste, critérios e métricas |
+| 🎤 [`docs/PITCH.md`](docs/PITCH.md) | Pitch do projeto: problema, solução, público e valor |
 | 📅 [`docs/features/agendamento.md`](docs/features/agendamento.md) | Agenda inteligente |
 | 🧠 [`docs/features/memoria.md`](docs/features/memoria.md) | Memória de longo prazo |
 | 🔔 [`docs/features/notificacoes.md`](docs/features/notificacoes.md) | Notificações (WhatsApp/email/emergência) |

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { createLocalOpencodeAdapter } from '../src/llm/localOpencodeAdapter.js';
 import { withToolProtocol, parseToolEnvelope } from '../src/llm/toolProtocol.js';
-import { systemPrompt } from '../src/prompt/systemPrompt.js';
+import { buildSystemPrompt } from '../src/prompt/systemPrompt.js';
 
 // Smoke test da IA (opencode local):
 // 1. Checa a saúde do servidor
@@ -20,7 +20,7 @@ try {
 }
 
 const reply = await adapter.complete({
-  system: withToolProtocol(systemPrompt),
+  system: withToolProtocol(buildSystemPrompt()),
   text: 'Olá! Estou testando o agente do Igor. Apenas confirme que recebeu esta mensagem.',
   title: 'whatsapp-agent:smoke',
 });

@@ -36,6 +36,8 @@
 | 🧙 [**OPERACAO.md**](OPERACAO.md) | Como rodar, parar e acompanhar o bot no dia a dia (operador) |
 | 🎚️ [**AJUSTES.md**](AJUSTES.md) | Ajustes rápidos sem código: serviços, agenda, boas-vindas, imagens |
 | 📧 [**SMTP.md**](SMTP.md) | Como gerar a senha de app do Gmail para os emails do bot |
+| 🧪 [**AVALIACAO.md**](AVALIACAO.md) | Casos de teste, critérios e métricas do assistente (passo 5) |
+| 🎤 [**PITCH.md**](PITCH.md) | Pitch: problema, solução, público e valor (passo 6) |
 
 > [!TIP]
 > Comece pelo **[README](../README.md)** — visão geral, arquitetura e como rodar em poucos passos.
