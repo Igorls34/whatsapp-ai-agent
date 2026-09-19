@@ -14,33 +14,88 @@
 
 </div>
 
-## ⚡ Início rápido — 1 comando
+## 🚀 Passo a passo para rodar (bem simples)
 
-Requisitos: [Node.js ≥ 20](https://nodejs.org). A CLI do **opencode** é opcional — o `npm run setup` instala se estiver faltando.
+Não precisa ser programador: se você conseguir abrir uma janela de **terminal** e copiar/colar comandos, você roda o projeto. São **apenas 4 passos**, e tudo se resume a **3 comandos**.
 
-| Passo | Comando | O que faz |
-|---|---|---|
-| 1 | `npm install` | Instala as dependências do projeto |
-| 2 | `npm run setup` | Wizard: identidade, agenda, notificações (instala o opencode se faltar) |
-| 3 | `npm start` | **Sobe tudo:** IA + bot WhatsApp + painel admin + chat web, com auto-restart |
+### 0 · Abra o terminal
 
-Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do responsável (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho). A sessão fica salva em `.sessions` — **não precisa escanear de novo**.
+É aqui que você digita os comandos. Em cada sistema é diferente:
 
-> [!NOTE]
-> O `npm start` é um **supervisor**: se qualquer processo cair, ele religa sozinho (com backoff). Encerre com `Ctrl+C`.
+- **🪟 Windows:** abra o **PowerShell** (clique em Iniciar, digite `PowerShell` e aperte Enter). Ou, dentro da pasta do projeto no Explorer: `Shift` + clique com o botão direito → **"Abrir janela do PowerShell aqui"**.
+- **🐧 Linux:** abra o **Terminal** (geralmente em Aplicativos → Acessórios → Terminal, ou com `Ctrl`+`Alt`+`T`).
+- **🍎 macOS:** abra o **Terminal** (Finder → Aplicativos → Utilitários → Terminal).
 
-## 🌐 O que abre em cada porta
+> 💡 A partir daqui, todo comando começa com `$` no exemplo — **você não digita o `$`**, ele só indica que é um comando. Cole o resto.
 
-| Componente | Endereço | O que é |
-|---|---|---|
-| 🤖 Painel admin | http://127.0.0.1:3000 | **Dashboard + gestão**: serviços, agenda e clientes |
-| 💬 Chat web | http://127.0.0.1:4000 | Conversa com o mesmo agente no navegador (portfólio) |
-| 🧠 IA local (opencode) | http://127.0.0.1:4096 | O modelo que gera as respostas (interno) |
-| 📱 Bot WhatsApp | — | Atende por mensagem no celular (sessão em `.sessions`) |
+### 1 · Baixe (clone) o projeto
 
-> Alterações no painel admin valem **imediatamente**, sem reiniciar o bot.
+Você precisa do **Git** instalado ([baixe aqui](https://git-scm.com/downloads) se não tiver). No terminal, copie e cole:
+
+```bash
+$ git clone https://github.com/Igorls34/whatsapp-ai-agent.git
+$ cd whatsapp-ai-agent
+```
+
+- O primeiro comando baixa o projeto numa pasta chamada `whatsapp-ai-agent`.
+- O segundo **entra** nessa pasta (é **aí que você vai rodar tudo**).
+
+> 💡 Sem Git? Outro jeito: no site do repositório, botão verde **"Code → Download ZIP"**, extraia a pasta e abra o terminal **dentro dela**.
+
+### 2 · Instale as dependências
+
+Este é o mesmo comando para **Windows, Linux e Mac**:
+
+```bash
+$ npm install
+```
+
+Vai demorar um pouco (baixa as bibliotecas, inclusive o `better-sqlite3`). Quando terminar, aparece de novo o cursor `$` — sinal de que deu certo. 🎉
+
+### 3 · Configure (só na primeira vez)
+
+Roda uma perguntinha de identidade, dos seus horários de trabalho e das notificações (e instala a IA do projeto, o **opencode**, automaticamente se faltar):
+
+```bash
+$ npm run setup
+```
+
+### 4 · Ligue tudo 🚀
+
+```bash
+$ npm start
+```
+
+Esse comando sobe **tudo ao mesmo tempo** e cuida de tudo sozinho:
+
+| Componente | O que é |
+|---|---|
+| 🤖 **Bot WhatsApp** | atende os clientes por mensagem no celular |
+| 🧠 **IA local** (opencode, `:4096`) | o modelo que gera as respostas |
+| 🖥️ **Painel admin** (`:3000`) | seu painel de gestão: dashboard, serviços, agenda e clientes |
+| 💬 **Chat web** (`:4000`) | conversa com o mesmo agente no navegador |
+
+Mesmo se algum processo der problema, ele **religa sozinho**. Para desligar tudo, aperte `Ctrl`+`C`.
+
+### Conecte o WhatsApp (só na primeira vez)
+
+No primeiro `npm start`, aparece um **QR Code** no terminal:
+
+1. Abra o WhatsApp no celular do responsável.
+2. Vá em **Ajustes → Aparelhos conectados → Conectar um aparelho**.
+3. Aponte a câmera para o QR Code do terminal.
+
+Depois disso a sessão fica salva na pasta `.sessions` — **não precisa escanear de novo**. O bot atende sozinho 24/7. 📱
+
+### Onde abrir cada coisa
+
+- **Painel admin** → `http://127.0.0.1:3000` (dashboard, serviços, agenda, clientes)
+- **Chat web** → `http://127.0.0.1:4000` (portfólio no navegador)
+- **Origem do problema?** → veja os logs do próprio terminal (tabela logo abaixo)
 
 ## ✅ Como saber se está de pé
+
+Fique de olho no terminal em que você rodou `npm start`:
 
 | Log do terminal | Significado |
 |---|---|
