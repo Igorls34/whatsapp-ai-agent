@@ -49,13 +49,15 @@ O `opencode serve` expõe a session API (`POST /session/:id/message`), **sem** s
 
 ## Guardrails e persona
 
-O `systemPrompt.js` define regras rígidas:
+O `systemPrompt.js` combina duas camadas:
 
-- **VALORES NUNCA:** o bot **jamais** informa preços/orçamentos ao cliente — valores são passados pessoalmente pelo Igor. Quando perguntado, sugere marcar uma reunião.
-- **Catálogo como fonte da verdade:** só apresenta serviços cadastrados na tabela `servicos` (nome + descrição), nunca inventa. O catálogo é montado **agrupado por `categoria`** (ex: Design Gráfico, Engenharia), o que deixa a apresentação do bot mais organizada.
-- **Sem promessas:** não promete prazos/garantias; remete ao Igor o que não estiver descrito.
-- **Escopo comercial:** redireciona assuntos fora do foco.
-- **Só 3 opções de horário por mensagem**, agendamento só após confirmação explícita.
+- **Persona (editável):** identidade, tom de voz e preferências ("sempre"/"nunca") definidas em `data/persona.json` e editáveis na aba **Persona** do painel — ver [persona.md](persona.md).
+- **Guardrails (fixos):** regras rígidas que ficam por cima da persona e não podem ser sobrescritas:
+  - **VALORES NUNCA:** o bot **jamais** informa preços/orçamentos ao cliente — valores são passados pessoalmente pelo responsável. Quando perguntado, sugere marcar uma reunião.
+  - **Catálogo como fonte da verdade:** só apresenta serviços cadastrados na tabela `servicos` (nome + descrição), nunca inventa. O catálogo é montado **agrupado por `categoria`** (ex: Design Gráfico, Engenharia), o que deixa a apresentação do bot mais organizada.
+  - **Sem promessas:** não promete prazos/garantias; remete ao responsável o que não estiver descrito.
+  - **Escopo comercial:** redireciona assuntos fora do foco.
+  - **Só 3 opções de horário por mensagem**, agendamento só após confirmação explícita.
 
 ## Mensagens múltiplas e boas-vindas
 

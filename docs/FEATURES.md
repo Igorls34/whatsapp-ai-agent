@@ -25,6 +25,7 @@
 | 🔔 **Notificações** | Avisa o Igor de agendamentos (WhatsApp + email) e recebe emergências | [notificacoes.md](features/notificacoes.md) |
 | 🖼️ **Imagens / GIFs** | Envia logo, catálogo visual e GIF de boas-vindas via `manifest.json` | [imagens.md](features/imagens.md) |
 | 🛠️ **Painel admin (CRUD)** | Página web para gerenciar os serviços sem SQL, com API REST | [painel-admin.md](features/painel-admin.md) |
+| 🎨 **Persona personalizável** | Identidade, tom de voz e preferências da IA editáveis pela página **Persona** (sem código, via JSON) | [persona.md](features/persona.md) |
 | 💬 **Chat Web** | Página simples para conversar com o mesmo agente no navegador (portfolio) | [chat-web.md](features/chat-web.md) |
 | 🛡️ **Controle de gargalos & bloqueio** | Limites de concorrência/timeout no LLM, envio espaçado, fila de avisos à prova de travamento e bloqueio por abuso | [backpressure.md](features/backpressure.md) |
 | 📲 **Multi-canal (futuro)** | Plano para portar o agente (agnóstico de canal) para Instagram, SMS e outros | [multicanal.md](features/multicanal.md) |

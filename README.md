@@ -90,6 +90,7 @@ Depois disso a sessão fica salva na pasta `.sessions` — **não precisa escane
 ### Onde abrir cada coisa
 
 - **Painel admin** → `http://127.0.0.1:3000` (dashboard, serviços, agenda, clientes)
+- **Persona da IA** → aba **Persona** no painel: mude nome, jeito de falar e preferências, sem código
 - **Chat web** → `http://127.0.0.1:4000` (portfólio no navegador)
 - **Origem do problema?** → veja os logs do próprio terminal (tabela logo abaixo)
 

@@ -1,4 +1,5 @@
 import { buildSystemPrompt } from '../prompt/systemPrompt.js';
+import { carregarPersona } from '../prompt/persona.js';
 import {
   withToolProtocol,
   parseToolEnvelope,
@@ -14,13 +15,13 @@ const MAX_ROUNDS = 6;
 // Monta a seção de catálogo de serviços para o system prompt.
 // Baseia-se SOMENTE no que veio do banco (lista editável manualmente).
 // IMPORTANTE: o catálogo NUNCA inclui preços — valores só são passados pelo
-// Igor pessoalmente, nunca pelo bot.
-export function buildServiceCatalog(servicos = []) {
+// responsável pessoalmente, nunca pelo bot.
+export function buildServiceCatalog(servicos = [], responsavel = 'o responsável') {
   if (!servicos.length) {
     return (
-      '## Catálogo de Serviços do Igor\n' +
-      '(catálogo vazio — apresente o Igor sob demanda: desenvolvimento de software, sistemas ' +
-      'e automações, mas SEM listar serviços específicos até o Igor preencher.)'
+      '## Catálogo de Serviços\n' +
+      `(catálogo vazio — apresente ${responsavel} sob demanda: desenvolvimento de software, sistemas ` +
+      `e automações, mas SEM listar serviços específicos até ${responsavel} preencher.)`
     );
   }
   const linhas = [];
@@ -36,7 +37,7 @@ export function buildServiceCatalog(servicos = []) {
       linhas.push(`- ${s.nome}${s.descricao ? `: ${s.descricao}` : ''}`);
     }
   }
-  return `## Catálogo de Serviços do Igor\n${linhas.join('\n')}`;
+  return `## Catálogo de Serviços\n${linhas.join('\n')}`;
 }
 
 export function buildImageCatalog(imagens = []) {
@@ -49,15 +50,18 @@ export function buildImageCatalog(imagens = []) {
 
 // canal: 'whatsapp' (padrão) | 'web' — ajusta o system prompt ao canal de atendimento.
 export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
-  const baseSystem = withToolProtocol(buildSystemPrompt({ canal }));
-
   // Aceita tanto executor.execute(...) quanto uma função direta.
   const runTool =
     typeof executor === 'function' ? executor : (name, args) => executor.execute(name, args);
 
   async function run({ telefone, resumo, mensagem, servicos, imagens }) {
+    // Monta o system prompt a cada turno: assim a persona editada no painel
+    // admin passa a valer imediatamente, sem reiniciar o bot.
+    const persona = carregarPersona();
+    const baseSystem = withToolProtocol(buildSystemPrompt({ canal, persona }));
+
     // Memória de longo prazo: resumo persistido do cliente injetado no system prompt.
-    const catalogo = buildServiceCatalog(servicos);
+    const catalogo = buildServiceCatalog(servicos, persona.responsavel);
     const imagensDisponiveis = buildImageCatalog(imagens);
     const extras = [catalogo, imagensDisponiveis].filter(Boolean).join('\n\n');
     const system = resumo
@@ -70,7 +74,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
       const reply = await adapter.runTurn({ sessionKey: telefone, system, text: turno });
 
       if (!reply || !reply.trim()) {
-        return 'Estou sem resposta no momento 😅. Quer que eu chame o Igor pra te atender?';
+        return `Estou sem resposta no momento 😅. Quer que eu chame ${persona.responsavel} pra te atender?`;
       }
 
       const call = parseToolEnvelope(reply);
@@ -80,7 +84,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
         // Rede de segurança: nunca deixa protocolo de ferramenta chegar ao cliente.
         if (reply.includes(TOOL_BEGIN) || reply.includes(TOOL_END)) {
           console.warn('[agent] resposta com marcador de ferramenta não interpretável — bloqueado');
-          return 'Estou com instabilidade agora 😅. Quer que eu chame o Igor pra te atender?';
+          return `Estou com instabilidade agora 😅. Quer que eu chame ${persona.responsavel} pra te atender?`;
         }
         return reply;
       }
@@ -90,7 +94,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
       turno = `${buildToolResultMessage(call.name, result)}\n\nContinue, por favor.`;
     }
 
-    return 'Parece que não consegui concluir isso agora 😅. Quer que eu chame o Igor pra te atender?';
+    return `Parece que não consegui concluir isso agora 😅. Quer que eu chame ${persona.responsavel} pra te atender?`;
   }
 
   return { run };

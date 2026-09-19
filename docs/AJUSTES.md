@@ -4,6 +4,17 @@ Guia prático para o Igor ajustar o bot sem precisar de código.
 
 > Para explicações de como cada funcionalidade funciona por dentro, veja [FEATURES.md](FEATURES.md) — cada uma tem página dedicada.
 
+## Personalizar a IA (persona)
+
+Dá para mudar o **nome, o jeito de falar e o foco do bot** sem mexer em código: rode o painel (`npm run admin` ou `npm start`), abra `http://127.0.0.1:3000` e vá na aba **Persona**. Preencha, clique em **Salvar** — vale na hora, sem reiniciar o bot.
+
+- O que muda: nome do assistente, identidade do negócio, como chamar o profissional, descrição do que oferece, personalidade/tom, mensagem de boas-vindas, usar emojis ou não, itens de "**sempre**" e "**nunca**".
+- O que **não** muda (guardrails fixos): nunca informar preço, nunca se passar pelo profissional, anti-abuso, escopo e sigilo.
+- Fica salvo em `data/persona.json` (fora do Git). O botão **Restaurar padrão** volta ao original.
+- Use **Pré-visualizar prompt** para ver o texto final que a IA recebe (WhatsApp ou Chat web).
+
+Detalhes completos: [persona.md](features/persona.md).
+
 ## Catálogo de serviços
 
 A forma mais fácil é o **painel web** (CRUD): rode `npm run admin` e abra `http://127.0.0.1:3000`. Lá você pode criar, editar, ativar/desativar e excluir serviços pelo navegador — as mudanças valem imediatamente, sem reiniciar o bot. Detalhes técnicos: [painel-admin.md](features/painel-admin.md).

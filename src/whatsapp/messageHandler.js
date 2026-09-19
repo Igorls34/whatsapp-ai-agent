@@ -5,6 +5,7 @@
 // 4. Periodicamente, gera o novo resumo da interação e grava no banco
 
 import { createSendPacer } from '../services/backpressure.js';
+import { textoBoasVindas } from '../prompt/persona.js';
 
 // Separa respostas em múltiplas mensagens (|||) para ficar natural no WhatsApp
 export const MSG_SEPARATOR = '|||';
@@ -109,7 +110,9 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
 
     // 1.5 Boas-vindas: cliente novo ou que não interagia há muito tempo recebe a
     // apresentação. Com imagens ativas, envia o gif/imagem + legenda; desativadas,
-    // envia apenas o texto de apresentação.
+    // envia apenas o texto de apresentação. A saudação pode ser personalizada
+    // na aba "Persona" do painel (persona.saudacao) — vale sem reiniciar.
+    const textoWelcome = textoBoasVindas(config.welcomes.texto);
     if (socket && ehNovoOuInativo && config.welcomes.imagem) {
       if (config.imagens.ativo) {
         const resultado = await imageService.enviarBoasVindas({ telefone, remoteJid });
@@ -117,13 +120,13 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
           console.log(`[welcome] material enviado a ${telefone}: ${resultado.imagem_enviada}`);
         } else {
           console.warn(`[welcome] sem material (${resultado.motivo}) — enviando só texto`);
-          await sendPacer.run(() => socket.sendMessage(remoteJid, { text: config.welcomes.texto }));
+          await sendPacer.run(() => socket.sendMessage(remoteJid, { text: textoWelcome }));
         }
       } else {
-        await sendPacer.run(() => socket.sendMessage(remoteJid, { text: config.welcomes.texto }));
+        await sendPacer.run(() => socket.sendMessage(remoteJid, { text: textoWelcome }));
         console.log(`[welcome] texto de boas-vindas enviado a ${telefone}`);
       }
-      memory.add(telefone, 'assistant', config.welcomes.texto);
+      memory.add(telefone, 'assistant', textoWelcome);
     }
 
     // 2. Registra a mensagem na memória volátil (usada pro resumo periódico)

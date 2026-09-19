@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { textoBoasVindas } from '../prompt/persona.js';
 
 // Envio de imagens ao cliente.
 //
@@ -44,7 +45,7 @@ export function createImageService({ getSocket, config }) {
       return this.enviar({
         telefone,
         imagem: config.welcomes.imagem,
-        legenda: config.welcomes.texto,
+        legenda: textoBoasVindas(config.welcomes.texto),
         remoteJid,
       });
     },

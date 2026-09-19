@@ -11,6 +11,7 @@ import { execSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import { salvarPersona } from '../src/prompt/persona.js';
 
 const NODE_MIN = 20;
 const rl = createInterface({ input, output });
@@ -76,9 +77,9 @@ async function garantirOpencode(auto) {
 function lerEnvExample() {
   const caminho = './.env.example';
   if (existsSync(caminho)) return readFileSync(caminho, 'utf8');
-  return `# ===== Identidade (o que o bot vai falar do negócio) =====
-# NEGOCIO_NOME=Assistente Virtual
-# NEGOCIO_RESPONSAVEL=o responsavel pelo negocio
+  return `# ===== Identidade =====
+# A identidade da IA é a "persona" (data/persona.json) — editável na aba "Persona" do painel.
+# PERSONA_PATH=./data/persona.json
 
 # ===== WhatsApp =====
 WA_SESSION_DIR=./.sessions
@@ -123,11 +124,10 @@ EMERGENCY_NUMBER=
 `;
 }
 
-function gerarEnv({ nome, responsavel, workSchedule, notifWhatsapp, notifEmail, smtpUser }) {
+function gerarEnv({ workSchedule, notifWhatsapp, notifEmail, smtpUser }) {
   const env = [];
   env.push('# ===== Identidade =====');
-  env.push(`NEGOCIO_NOME=${nome}`);
-  env.push(`NEGOCIO_RESPONSAVEL=${responsavel}`);
+  env.push('# A identidade da IA é a "persona" (data/persona.json), definida no setup e editável na aba "Persona" do painel.');
   env.push('');
   env.push('# ===== WhatsApp =====');
   env.push('WA_SESSION_DIR=./.sessions');
@@ -213,6 +213,14 @@ async function main() {
   const conteudo = gerarEnv({ nome, responsavel, workSchedule, notifWhatsapp, notifEmail, smtpUser });
   writeFileSync('./.env', conteudo, 'utf8');
   console.log('\n✅ .env criado/atualizado.');
+
+  // A identidade da IA agora vem da persona (edite tudo na aba "Persona" do painel).
+  try {
+    salvarPersona({ negocio: nome, responsavel });
+    console.log('✅ Persona criada em data/persona.json (ajuste o resto na aba "Persona" do painel).');
+  } catch (err) {
+    console.warn('⚠️  Não consegui criar a persona:', err.message);
+  }
 
   fin();
   banner('🎉 Pronto! Para ligar tudo:');

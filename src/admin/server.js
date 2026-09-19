@@ -5,6 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { openDatabase } from '../db/database.js';
 import { createRepositories } from '../db/repositories.js';
 import { config } from '../config.js';
+import {
+  carregarPersona,
+  salvarPersona,
+  montarPersona,
+  resetarPersona,
+  caminhoPersona,
+} from '../prompt/persona.js';
+import { buildSystemPrompt } from '../prompt/systemPrompt.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const HTML_PATH = path.join(__dirname, 'index.html');
@@ -137,6 +145,37 @@ const server = http.createServer(async (req, res) => {
       const resultado = repos.atenderCliente(telefone);
       if (!resultado.ok) return json(res, 409, { ok: false, erro: 'O chat já está liberado.' });
       return json(res, 200, { ok: true, cliente: repos.getCliente(telefone) });
+    }
+
+    // --- Persona (personalização da IA) ---
+
+    // GET /api/persona — persona efetiva + defaults + caminho do arquivo editável
+    if (req.method === 'GET' && pathname === '/api/persona') {
+      return json(res, 200, {
+        ok: true,
+        persona: carregarPersona(),
+        caminho: caminhoPersona(),
+      });
+    }
+
+    // PUT /api/persona — salva a personalização (arquivo data/persona.json)
+    if (req.method === 'PUT' && pathname === '/api/persona') {
+      const body = await readBody(req);
+      const persona = salvarPersona(body);
+      return json(res, 200, { ok: true, persona });
+    }
+
+    // POST /api/persona/reset — restaura os padrões de fábrica
+    if (req.method === 'POST' && pathname === '/api/persona/reset') {
+      return json(res, 200, { ok: true, persona: resetarPersona() });
+    }
+
+    // POST /api/persona/preview — mostra o prompt final que a IA vai receber
+    if (req.method === 'POST' && pathname === '/api/persona/preview') {
+      const body = await readBody(req);
+      const canal = body.canal === 'web' ? 'web' : 'whatsapp';
+      const persona = body.persona ? montarPersona(body.persona) : carregarPersona();
+      return json(res, 200, { ok: true, canal, prompt: buildSystemPrompt({ canal, persona }) });
     }
 
     // GET /api/servicos

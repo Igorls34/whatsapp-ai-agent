@@ -77,7 +77,7 @@ Veja o [`.env.example`](../.env.example) completo. Principais variáveis:
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `NEGOCIO_NOME` / `NEGOCIO_RESPONSAVEL` | `Assistente Virtual` / `o responsável pelo negócio` | Identidade usada nas apresentações e mensagens do bot |
+| `PERSONA_PATH` | `./data/persona.json` | Caminho do JSON com a personalização da IA (ver [persona.md](features/persona.md)). |
 | `LLM_BACKEND` | `local-opencode` | Backend da IA. |
 | `OPENCODE_SERVER_URL` | `http://127.0.0.1:4096` | Onde o `opencode serve` está rodando. |
 | `OPENCODE_MODEL` | default da máquina | Ex: `opencode/big-pickle`. |
@@ -97,6 +97,10 @@ Veja o [`.env.example`](../.env.example) completo. Principais variáveis:
 | `LLM_MAX_CONCURRENT` / `LLM_TIMEOUT_MS` | `3` / `60000` | Turnos de IA em paralelo e teto por turno. |
 | `ENVIO_MIN_GAP_MS` | `700` | Intervalo mínimo entre envios no WhatsApp (ms). |
 | `WEB_MAX_CONCURRENT` / `WEB_TIMEOUT_MS` | `3` / `60000` | Teto de respostas simultâneas e timeout no chat web. |
+
+### 🎨 Persona (personalização da IA)
+
+A identidade, o tom e as preferências da IA **não** ficam no `.env`: ficam em JSON e são editáveis pela aba **Persona** do painel admin (`data/persona.json`), partindo de `src/prompt/persona.default.json`. O `PERSONA_PATH` só é usado para apontar o arquivo para outro lugar. Detalhes: [features/persona.md](features/persona.md).
 
 ---
 
