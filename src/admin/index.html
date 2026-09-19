@@ -25,8 +25,12 @@
     body {
       margin: 0;
       font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(59,130,246,.06), transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139,92,246,.06), transparent 40%),
+        var(--bg);
       color: var(--ink);
+      min-height: 100vh;
     }
 
     .hero {
@@ -93,6 +97,30 @@
     .b-livre      { background: rgba(148,163,184,.1); color: var(--muted); border: 1px solid rgba(148,163,184,.2); }
     .tag-cat { font-size: .72rem; font-weight: 600; color: var(--accent); background: rgba(139,92,246,.1); padding: 2px 8px; border-radius: 12px; }
 
+    /* ---- Dashboard / mini-gestão ---- */
+    .kpi {
+      border: 1px solid var(--border-card); border-radius: var(--radius);
+      background: var(--card); padding: 14px 16px;
+    }
+    .kpi .kpi-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); font-weight: 600; }
+    .kpi .kpi-valor {
+      font-size: 1.9rem; font-weight: 800; line-height: 1.15;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .kpi .kpi-valor.kpi-valor-frio { background: none; -webkit-text-fill-color: var(--ink); color: var(--ink); }
+    .kpi .kpi-sublinha { font-size: .74rem; color: var(--muted); margin-top: 2px; }
+
+    .cliente-linha { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; }
+    .cliente-linha + .cliente-linha { border-top: 1px solid var(--border-card); }
+    .cliente-linha .nome { font-weight: 600; font-size: .9rem; }
+    .cliente-linha .subt { font-size: .78rem; color: var(--muted); }
+    .cliente-linha .bloq { font-size: .68rem; font-weight: 700; color: #ef4444; background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.25); padding: 2px 8px; border-radius: 12px; white-space: nowrap; }
+
+    #busca-clientes { max-width: 320px; }
+    .resumo-cell { font-size: .82rem; color: var(--muted); max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hora-cell { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+
     .form-label { font-size: .85rem; font-weight: 600; color: var(--ink); }
 
     .card-footer-bar { background: #0f0f0f; border-top: 1px solid var(--border-card); border-radius: 0 0 var(--radius) var(--radius); }
@@ -144,14 +172,97 @@
 
     <ul class="nav nav-tabs mb-4" role="tablist">
       <li class="nav-item" role="presentation">
-        <a class="nav-link active" id="tab-btn-servicos" href="#/servicos">Serviços</a>
+        <a class="nav-link active" id="tab-btn-dashboard" href="#/dashboard">Dashboard</a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="tab-btn-servicos" href="#/servicos">Serviços</a>
       </li>
       <li class="nav-item" role="presentation">
         <a class="nav-link" id="tab-btn-agenda" href="#/agenda">Agenda</a>
       </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="tab-btn-clientes" href="#/clientes">Clientes</a>
+      </li>
     </ul>
 
     <div class="tab-content">
+
+      <!-- ============ ABA DASHBOARD ============ -->
+      <div class="tab-pane show active" id="tab-dashboard" role="tabpanel">
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Clientes</div>
+              <div class="kpi-valor" data-kpi="clientes">—</div>
+              <div class="kpi-sublinha" data-kpi-sub="clientes"></div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Serviços ativos</div>
+              <div class="kpi-valor kpi-valor-frio" data-kpi="servicos_ativos">—</div>
+              <div class="kpi-sublinha" data-kpi-sub="servicos_ativos"></div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Agendado</div>
+              <div class="kpi-valor" data-kpi="agendado">—</div>
+              <div class="kpi-sublinha">futuro</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Confirmado</div>
+              <div class="kpi-valor" data-kpi="confirmada">—</div>
+              <div class="kpi-sublinha">futuro</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Bloqueados</div>
+              <div class="kpi-valor" data-kpi="bloqueados">—</div>
+              <div class="kpi-sublinha">chats fechados</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-4 col-lg-2">
+            <div class="kpi">
+              <div class="kpi-label">Avisos fila</div>
+              <div class="kpi-valor" data-kpi="avisos_pendentes">—</div>
+              <div class="kpi-sublinha">p/ WhatsApp</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header">Próximos agendamentos</div>
+              <div class="table-responsive" id="dash-proximos"></div>
+            </div>
+          </div>
+          <div class="col-lg-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header d-flex align-items-center justify-content-between gap-2">
+                <span>Últimos clientes</span>
+                <a href="#/clientes" class="small" style="color:var(--primary);">ver todos →</a>
+              </div>
+              <div id="dash-clientes"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ ABA CLIENTES ============ -->
+      <div class="tab-pane" id="tab-clientes" role="tabpanel">
+        <div class="card shadow-sm">
+          <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span>Clientes na memória do assistente</span>
+            <input type="search" class="form-control" id="busca-clientes" placeholder="Buscar por nome ou telefone…" />
+          </div>
+          <div class="table-responsive" id="clientes-lista"></div>
+        </div>
+      </div>
 
       <!-- ============ ABA SERVIÇOS ============ -->
       <div class="tab-pane show active" id="tab-servicos" role="tabpanel">
@@ -290,13 +401,16 @@
   </main>
 
   <script>
-    // ---- Router SPA: navegação pelas rotas do cabeçalho (#/servicos, #/agenda) ----
-    // Agenda é lazy: só monta quando a rota abre pela primeira vez.
+    // ---- Router SPA: navegação pelas rotas do cabeçalho ----
+    // (#/dashboard, #/servicos, #/agenda, #/clientes). Agenda e clientes
+    // são lazy: só montam quando a rota abre pela primeira vez.
     let agendaCarregado = false;
+    let clientesCarregado = false;
 
     function rotear() {
-      const hash = ['#/servicos', '#/agenda'].includes(location.hash) ? location.hash : '#/servicos';
-      const id = hash === '#/agenda' ? 'tab-agenda' : 'tab-servicos';
+      const rotas = { '#/dashboard': 'tab-dashboard', '#/servicos': 'tab-servicos', '#/agenda': 'tab-agenda', '#/clientes': 'tab-clientes' };
+      const hash = rotas[location.hash] ? location.hash : '#/dashboard';
+      const id = rotas[hash];
       document.querySelectorAll('.nav-tabs .nav-link').forEach((b) =>
         b.classList.toggle('active', b.getAttribute('href') === hash));
       document.querySelectorAll('.tab-pane').forEach((p) => {
@@ -308,6 +422,11 @@
         agendaCarregado = true;
         carregarAgendamentos();
       }
+      if (id === 'tab-clientes' && !clientesCarregado) {
+        clientesCarregado = true;
+        carregarClientes();
+      }
+      if (id === 'tab-dashboard') carregarDashboard();
       window.scrollTo(0, 0);
     }
     window.addEventListener('hashchange', rotear);
@@ -678,7 +797,165 @@
         carregarAgendamentos();
       }));
 
-    // ---- Início: serviços imediatos; agenda sob demanda ----
+    // ================= ABA DASHBOARD =================
+    const STATUS_BADGE_DASH = { agendado: 'b-agendado', confirmada: 'b-confirmada', cancelada: 'b-cancelada', livre: 'b-livre' };
+
+    function dataRelativa(iso) {
+      if (!iso) return 'nunca';
+      const t = Date.parse(String(iso).replace(' ', 'T'));
+      if (Number.isNaN(t)) return iso;
+      const diffMin = Math.floor((Date.now() - t) / 60000);
+      if (diffMin < 1) return 'agora';
+      if (diffMin < 60) return `há ${diffMin} min`;
+      const h = Math.floor(diffMin / 60);
+      if (h < 24) return `há ${h}h`;
+      return `há ${Math.floor(h / 24)}d`;
+    }
+
+    function formatoDia(iso) {
+      if (!iso) return '—';
+      const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const hoje = new Date();
+      const hojeZero = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+      const diff = Math.round((dt - hojeZero) / 86400000);
+      const diasSemana = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      const nomeDia = diasSemana[dt.getDay()];
+      const dataBr = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`;
+      if (diff === 0) return `Hoje, ${dataBr}`;
+      if (diff === 1) return `Amanhã, ${dataBr}`;
+      if (diff === -1) return `Ontem, ${dataBr}`;
+      return `${nomeDia}, ${dataBr}`;
+    }
+
+    async function carregarDashboard() {
+      try {
+        const { painel } = await api('/api/dashboard');
+        setKpi('clientes', painel.clientes, painel.bloqueados ? `${painel.bloqueados} bloqueado(s)` : 'ativos');
+        setKpi('servicos_ativos', `${painel.servicosAtivos}/${painel.servicos}`, 'do catálogo');
+        setKpi('agendado', painel.agendaFutura.agendado ?? 0, 'futuro');
+        setKpi('confirmada', painel.agendaFutura.confirmada ?? 0, 'futuro');
+        setKpi('bloqueados', painel.bloqueados, 'chats fechados');
+        setKpi('avisos_pendentes', painel.avisosPendentes, 'p/ WhatsApp');
+
+        // Próximos agendamentos
+        const proxEl = document.getElementById('dash-proximos');
+        if (!painel.proximos.length) {
+          proxEl.innerHTML = '<div class="text-center text-muted p-4">Nenhum agendamento futuro.</div>';
+        } else {
+          proxEl.innerHTML = `
+            <table class="table table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Quando</th><th>Cliente</th><th>Motivo</th><th style="width:100px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${painel.proximos.map((a) => `
+                  <tr>
+                    <td class="hora-cell">${esc(formatoDia(a.data_hora))} <strong>${esc((a.data_hora || '').slice(11, 16))}</strong></td>
+                    <td>
+                      <strong>${esc(a.cliente_nome || 'Sem nome')}</strong>
+                      <em class="d-block text-muted" style="font-size:.75rem;">${esc(a.cliente_telefone || '')}</em>
+                    </td>
+                    <td class="resumo-cell" style="max-width:200px;" title="${esc(a.motivo || '')}">${esc(a.motivo || '—')}</td>
+                    <td><span class="badge badge-status ${STATUS_BADGE_DASH[a.status] || 'text-bg-light'}">${STATUS_LABEL[a.status] || esc(a.status)}</span></td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>`;
+        }
+
+        // Últimos clientes
+        const cliEl = document.getElementById('dash-clientes');
+        const { clientes } = await api('/api/clientes?q=');
+        const recentes = clientes.slice(0, 6);
+        if (!recentes.length) {
+          cliEl.innerHTML = '<div class="text-center text-muted p-4">Nenhum cliente ainda. O bot os registra nas primeiras conversas.</div>';
+        } else {
+          cliEl.innerHTML = recentes.map((c) => `
+            <div class="cliente-linha">
+              <div>
+                <div class="nome">${esc(c.nome || c.telefone)}</div>
+                <div class="subt">${esc(c.telefone)} · ${esc(dataRelativa(c.ultima_interacao_at))}</div>
+              </div>
+              ${c.chat_fechado ? '<span class="bloq">bloqueado</span>' : ''}
+            </div>`).join('');
+        }
+      } catch (err) {
+        document.getElementById('dash-proximos').innerHTML = `<div class="text-center text-muted p-4">Erro: ${esc(err.message)}</div>`;
+      }
+    }
+
+    function setKpi(chave, valor, sub) {
+      const el = document.querySelector(`[data-kpi="${chave}"]`);
+      if (el) el.textContent = valor;
+      const subEl = document.querySelector(`[data-kpi-sub="${chave}"]`);
+      if (subEl) subEl.textContent = sub;
+    }
+
+    // ================= ABA CLIENTES =================
+    async function carregarClientes() {
+      const q = document.getElementById('busca-clientes').value.trim();
+      const el = document.getElementById('clientes-lista');
+      let clientes;
+      try {
+        ({ clientes } = await api(`/api/clientes?q=${encodeURIComponent(q)}`));
+      } catch (err) {
+        el.innerHTML = `<div class="text-center text-muted p-4">Erro ao carregar: ${esc(err.message)}</div>`;
+        return;
+      }
+      if (!clientes.length) {
+        el.innerHTML = '<div class="text-center text-muted p-4">Nenhum cliente encontrado.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th style="width:190px;">Cliente</th>
+              <th>Memória (resumo)</th>
+              <th style="width:100px;">Última interação</th>
+              <th style="width:110px;">Chat</th>
+              <th style="width:130px;">Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${clientes.map((c) => `
+              <tr>
+                <td>
+                  <strong>${esc(c.nome || '(sem nome)')}</strong>
+                  <em class="d-block text-muted" style="font-size:.75rem;">${esc(c.telefone)}</em>
+                </td>
+                <td class="resumo-cell" style="max-width:360px;" title="${esc(c.resumo)}">${c.resumo ? esc(c.resumo) : '—'}</td>
+                <td class="hora-cell">${esc(dataRelativa(c.ultima_interacao_at))}</td>
+                <td>${c.chat_fechado
+                    ? '<span class="badge badge-status b-cancelada">bloqueado</span>'
+                    : '<span class="badge badge-status b-confirmada">ativo</span>'}</td>
+                <td>
+                  ${c.chat_fechado
+                    ? `<button class="btn btn-sm btn-outline-primary" onclick="liberarChat('${esc(c.telefone)}')">Liberar</button>`
+                    : '<span class="text-muted" style="font-size:.8rem;">—</span>'}
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    window.liberarChat = async (telefone) => {
+      if (!confirm(`Reabrir o chat deste cliente?\n${telefone}`)) return;
+      try {
+        await api(`/api/clientes/${encodeURIComponent(telefone)}`, 'PUT');
+        await carregarClientes();
+      } catch (err) { alert(err.message); }
+    };
+
+    let buscaTimer = null;
+    document.getElementById('busca-clientes').addEventListener('input', () => {
+      clearTimeout(buscaTimer);
+      buscaTimer = setTimeout(carregarClientes, 350);
+    });
+
+    // ---- Início: dashboard imediato; agenda e clientes sob demanda ----
     carregarCategorias();
     carregarLista();
     rotear();

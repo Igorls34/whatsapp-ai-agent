@@ -119,6 +119,26 @@ const server = http.createServer(async (req, res) => {
       return res.end(fs.readFileSync(filePath));
     }
 
+    // GET /api/dashboard — resumo para a mini-gestão
+    if (req.method === 'GET' && pathname === '/api/dashboard') {
+      return json(res, 200, { ok: true, painel: repos.obterResumoPainel() });
+    }
+
+    // GET /api/clientes?q=
+    if (req.method === 'GET' && pathname === '/api/clientes') {
+      const q = String(url.searchParams.get('q') || '');
+      return json(res, 200, { ok: true, clientes: repos.listarClientes({ q, limite: 200 }) });
+    }
+
+    // PUT /api/clientes/:telefone — reabre o chat (desbloqueia)
+    const matchCli = pathname.match(/^\/api\/clientes\/([^/]+)$/);
+    if (req.method === 'PUT' && matchCli) {
+      const telefone = decodeURIComponent(matchCli[1]);
+      const resultado = repos.atenderCliente(telefone);
+      if (!resultado.ok) return json(res, 409, { ok: false, erro: 'O chat já está liberado.' });
+      return json(res, 200, { ok: true, cliente: repos.getCliente(telefone) });
+    }
+
     // GET /api/servicos
     if (req.method === 'GET' && pathname === '/api/servicos') {
       return json(res, 200, { ok: true, servicos: repos.listarServicosAdmin() });

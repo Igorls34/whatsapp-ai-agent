@@ -187,6 +187,41 @@ export function createRepositories(db) {
     `),
 
     excluirAgendamento: db.prepare(`DELETE FROM agenda WHERE id = ?`),
+
+    // --- Painel admin: dashboard e gestão de clientes ---
+
+    dashboardCnt: db.prepare(`
+      SELECT
+        (SELECT COUNT(*) FROM clientes)                                    AS clientes,
+        (SELECT COUNT(*) FROM clientes WHERE chat_fechado = 1)              AS bloqueados,
+        (SELECT COUNT(*) FROM servicos)                                     AS servicos,
+        (SELECT COUNT(*) FROM servicos WHERE ativo = 1)                     AS servicos_ativos,
+        (SELECT COUNT(*) FROM avisos_pendentes)                             AS avisos_pendentes
+    `),
+
+    dashboardAgendaFutura: db.prepare(`
+      SELECT status, COUNT(*) AS total
+      FROM agenda
+      WHERE data_hora >= @agora
+      GROUP BY status
+    `),
+
+    proximosAgendamentos: db.prepare(`
+      SELECT a.id, a.data_hora, a.status, a.cliente_telefone, a.cliente_nome, a.motivo
+      FROM agenda a
+      WHERE a.status IN ('agendado', 'confirmada') AND a.data_hora >= @agora
+      ORDER BY a.data_hora ASC, a.id ASC
+      LIMIT @limite
+    `),
+
+    listarClientes: db.prepare(`
+      SELECT telefone, nome, resumo, ultima_interacao_at, criado_em, atualizado_em,
+             chat_fechado, motivo_bloqueio, bloqueado_em, desbloqueio_em
+      FROM clientes
+      WHERE (@q = '' OR nome LIKE @q OR telefone LIKE @q)
+      ORDER BY (ultima_interacao_at IS NULL), ultima_interacao_at DESC, id DESC
+      LIMIT @limite
+    `),
   };
 
   return {
@@ -421,6 +456,39 @@ export function createRepositories(db) {
 
     excluirAgendamento(id) {
       return stmts.excluirAgendamento.run(id).changes > 0;
+    },
+
+    // --- Painel admin: dashboard e gestão de clientes ---
+
+    obterResumoPainel() {
+      const item = (r) => Number(r?.total ?? 0);
+      const agora = toLocalIso(new Date());
+      const agendaFutura = {};
+      for (const r of stmts.dashboardAgendaFutura.all({ agora })) {
+        agendaFutura[r.status] = item(r);
+      }
+      const c = stmts.dashboardCnt.get();
+      return {
+        clientes: c.clientes,
+        bloqueados: c.bloqueados,
+        servicos: c.servicos,
+        servicosAtivos: c.servicos_ativos,
+        avisosPendentes: c.avisos_pendentes,
+        agendaFutura,
+        proximos: stmts.proximosAgendamentos.all({ agora, limite: 8 }),
+      };
+    },
+
+    listarClientes({ q = '', limite = 100 } = {}) {
+      const termo = String(q || '').trim().slice(0, 80);
+      return stmts.listarClientes.all({ q: `%${termo}%`, limite });
+    },
+
+    atenderCliente(telefone) {
+      const c = stmts.getCliente.get(telefone);
+      if (!c?.chat_fechado) return { ok: false, motivo: 'ja_aberto' };
+      stmts.liberarBloqueio.run(telefone);
+      return { ok: true };
     },
   };
 }
