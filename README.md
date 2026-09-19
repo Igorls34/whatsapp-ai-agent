@@ -22,7 +22,7 @@ Não precisa ser programador: se você conseguir abrir uma janela de **terminal*
 
 É aqui que você digita os comandos. Em cada sistema é diferente:
 
-- **🪟 Windows:** abra o **PowerShell** (clique em Iniciar, digite `powees`… *perdão* — digite `PowerShell` e aperte Enter). Ou, dentro da pasta do projeto no Explorer: `Shift` + clique com o botão direito → **"Abrir janela do PowerShell aqui"**.
+- **🪟 Windows:** abra o **PowerShell** (clique em Iniciar, digite `PowerShell` e aperte Enter). Ou, dentro da pasta do projeto no Explorer: `Shift` + clique com o botão direito → **"Abrir janela do PowerShell aqui"**.
 - **🐧 Linux:** abra o **Terminal** (geralmente em Aplicativos → Acessórios → Terminal, ou com `Ctrl`+`Alt`+`T`).
 - **🍎 macOS:** abra o **Terminal** (Finder → Aplicativos → Utilitários → Terminal).
 
