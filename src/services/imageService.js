@@ -6,7 +6,7 @@ import path from 'node:path';
 // As imagens ficam em assets/imagens/ e são catalogadas em manifest.json:
 //
 //   {
-//     "logo_igor":      { "arquivo": "logo.png",              "descricao": "Logo do Igor Dev" },
+//     "logo":            { "arquivo": "logo.png",              "descricao": "Logo do negócio" },
 //     "catalogo_serv":  { "arquivo": "catalogo-servicos.png", "descricao": "Tabela de serviços e preços" }
 //   }
 //

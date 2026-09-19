@@ -2,7 +2,7 @@
 
 # 🎯 Agente de IA no WhatsApp (núcleo)
 
-O **principal** do projeto: um assistente virtual 24/7 que atende clientes do Igor pelo WhatsApp usando um LLM rodando **localmente** via `opencode serve` — sem depender de APIs pagas para começar.
+O **principal** do projeto: um assistente virtual 24/7 que atende clientes do negócio pelo WhatsApp usando um LLM rodando **localmente** via `opencode serve` — sem depender de APIs pagas para começar.
 
 ## Visão geral
 
@@ -43,7 +43,7 @@ O `opencode serve` expõe a session API (`POST /session/:id/message`), **sem** s
 | `consultar_disponibilidade` | `availabilityService.js` | Horários livres da agenda |
 | `agendar_reuniao` | `schedulingService.js` | Reserva um horário (ver [agendamento](agendamento.md)) |
 | `salvar_resumo_cliente` | `clientMemoryService.js` | Grava memória do cliente (ver [memória](memoria.md)) |
-| `notificar_emergencia` | `emergencyService.js` | Avisa o Igor de urgência (ver [notificações](notificacoes.md)) |
+| `notificar_emergencia` | `emergencyService.js` | Avisa o responsável de urgência (ver [notificações](notificacoes.md)) |
 | `enviar_imagem` | `imageService.js` | Envia imagem/GIF (ver [imagens](imagens.md)) |
 | `bloquear_cliente` | `toolExecutor.js` | Encerra o chat por abuso: permanente no WhatsApp, 1h no web (ver [backpressure](backpressure.md)) |
 
@@ -51,9 +51,9 @@ O `opencode serve` expõe a session API (`POST /session/:id/message`), **sem** s
 
 O `systemPrompt.js` define regras rígidas:
 
-- **VALORES NUNCA:** o bot **jamais** informa preços/orçamentos ao cliente — valores são passados pessoalmente pelo Igor. Quando perguntado, sugere marcar uma reunião.
+- **VALORES NUNCA:** o bot **jamais** informa preços/orçamentos ao cliente — valores são passados pessoalmente pelo responsável. Quando perguntado, sugere marcar uma reunião.
 - **Catálogo como fonte da verdade:** só apresenta serviços cadastrados na tabela `servicos` (nome + descrição), nunca inventa. O catálogo é montado **agrupado por `categoria`** (ex: Design Gráfico, Engenharia), o que deixa a apresentação do bot mais organizada.
-- **Sem promessas:** não promete prazos/garantias; remete ao Igor o que não estiver descrito.
+- **Sem promessas:** não promete prazos/garantias; remete ao responsável o que não estiver descrito.
 - **Escopo comercial:** redireciona assuntos fora do foco.
 - **Só 3 opções de horário por mensagem**, agendamento só após confirmação explícita.
 

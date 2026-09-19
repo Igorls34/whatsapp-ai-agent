@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS avisos_pendentes (
 );
 
 -- ============================================================================
--- Serviços oferecidos pelo Igor (catálogo editável manualmente)
+-- Serviços oferecidos pelo negócio (catálogo editável manualmente)
 -- ativo=0 esconde o serviço sem apagar; ordem controla a exibição.
 -- categoria agrupa os serviços para o bot apresentar de forma organizada.
 -- ============================================================================

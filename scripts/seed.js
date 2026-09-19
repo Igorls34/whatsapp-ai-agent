@@ -4,7 +4,7 @@ import { openDatabase } from '../src/db/database.js';
 import { createRepositories, toLocalIso } from '../src/db/repositories.js';
 
 // Gera slots de disponibilidade como COMPLEMENTO dos horários de trabalho.
-// WORK_SCHEDULE define quando o Igor está ocupado; o seed cria slots nos
+// WORK_SCHEDULE define quando o atendimento está ocupado; o seed cria slots nos
 // horários livres dentro da janela SCHEDULE_START–SCHEDULE_END.
 // Uso: npm run seed
 

@@ -2,13 +2,13 @@
 
 # 🔔 Notificações
 
-O bot **avisa o Igor** automaticamente em dois momentos: quando um cliente agenda (WhatsApp + email) e quando um cliente precisa de atendimento urgente.
+O bot **avisa o responsável** automaticamente em dois momentos: quando um cliente agenda (WhatsApp + email) e quando um cliente precisa de atendimento urgente.
 
 ## 1. Notificação de agendamento
 
 Quando `agendar_reuniao` reserva um horário, o `notificationService.js` dispara:
 
-- **WhatsApp** para `NOTIF_WHATSAPP` (número do Igor)
+- **WhatsApp** para `NOTIF_WHATSAPP` (número do responsável)
 - **Email** para `NOTIF_EMAIL` via SMTP (Gmail por padrão)
 
 Conteúdo: cliente, horário e motivo.
@@ -22,8 +22,8 @@ Verificação no log:
 
 | Variável | Descrição |
 |---|---|
-| `NOTIF_WHATSAPP` | Número do Igor (ex.: `5524998190280`) — vazio desativa WhatsApp |
-| `NOTIF_EMAIL` | Email do Igor — vazio desativa email |
+| `NOTIF_WHATSAPP` | Número do responsável (ex.: `5524998190280`) — vazio desativa WhatsApp |
+| `NOTIF_EMAIL` | Email do responsável — vazio desativa email |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | `smtp.gmail.com` / `465` / `true` |
 | `SMTP_USER` / `SMTP_PASS` | Email + **senha de app** do Gmail (ver [SMTP.md](../SMTP.md)) |
 
@@ -54,5 +54,5 @@ Processos **sem socket do WhatsApp** (chat web, painel) não conseguem enviar no
 
 ## Pontos de atenção
 
-- O bot usa a **mesma conexão WhatsApp** para enviar as notificações ao Igor — se o socket cair, só o email segue (e vice-versa o log em emergência).
+- O bot usa a **mesma conexão WhatsApp** para enviar as notificações ao responsável — se o socket cair, só o email segue (e vice-versa o log em emergência).
 - Para testar o email sem agendar: ver "Como testar rápido" em [SMTP.md](../SMTP.md).

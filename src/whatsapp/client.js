@@ -36,7 +36,7 @@ function abrirPopupQr() {
   </style>
 </head>
 <body>
-  <h2>Escaneie com o WhatsApp do Igor</h2>
+  <h2>Escaneie com o WhatsApp do responsável</h2>
   <img id="qr" alt="QR Code (aguardando...)" src="qr-atual.png">
   <p id="status">Gerando QR... atualizo sozinho a cada ~5s.</p>
   <p class="warn">PRIVADO: não compartilhe nem exponha este QR.</p>
@@ -142,7 +142,7 @@ export async function connectWhatsApp({ onMessage, onSocket }) {
     const { connection, lastDisconnect, qr } = update;
 
     if (qr) {
-      console.log('\nEscaneie o QR Code abaixo com o WhatsApp do Igor:\n');
+      console.log('\nEscaneie o QR Code abaixo com o WhatsApp do responsável:\n');
       boxAviso([
         '⚠ ⚠ ⚠  PRIVADO  ⚠ ⚠ ⚠',
         'Este QR é pessoal e intransferível.',

@@ -2,13 +2,13 @@
 
 # 📅 Agendamento Inteligente
 
-Deixa o cliente **agendar uma reunião com o Igor sozinho**, respeitando a rotina de trabalho dele. O bot conhece quando o Igor trabalha (horários **bloqueados**), quando pode atender, e exibe/se agende via conversa.
+Deixa o cliente **agendar uma reunião sozinho**, respeitando a rotina de trabalho do negócio. O bot conhece quando o atendimento está ocupado (horários **bloqueados**), quando pode atender, e exibe/se agende via conversa.
 
 ## Como funciona
 
 1. **Auto-seed** (`src/db/autoSeed.js`): no start e a cada 12h, o bot gera slots `livre` na tabela `agenda` para os próximos dias, dentro da janela de atendimento e **fora** dos horários de trabalho. Slots livres já passados são limpos.
 2. **Cliente pergunta horário** → a ferramenta `consultar_disponibilidade` (`availabilityService.js`) lê os slots livres.
-3. **Cliente escolhe um horário** → a ferramenta `agendar_reuniao` (`schedulingService.js`) reserva o slot (status `livre` → `agendado`), grava cliente/motivo e **notifica o Igor** (ver [notificações](notificacoes.md)).
+3. **Cliente escolhe um horário** → a ferramenta `agendar_reuniao` (`schedulingService.js`) reserva o slot (status `livre` → `agendado`), grava cliente/motivo e **notifica o responsável** (ver [notificações](notificacoes.md)).
 
 ## Regras de horário (`.env`)
 
@@ -20,7 +20,7 @@ Deixa o cliente **agendar uma reunião com o Igor sozinho**, respeitando a rotin
 | `SLOT_MINUTES` | `60` | Duração de cada slot (1h) |
 | `HORIZON_DAYS` | `14` | Quantos dias à frente o auto-seed gera |
 
-Exemplo atual: o Igor trabalha seg–qui 12h–21h, sex 10h–19h, sáb 8h–14h e dom fica livre. A janela de agendamento é 7h–0h, então o cliente encontra horários **fora** desses blocos.
+Exemplo atual: o atendimento fica ocupado seg–qui 12h–21h, sex 10h–19h, sáb 8h–14h e dom fica livre. A janela de agendamento é 7h–0h, então o cliente encontra horários **fora** desses blocos.
 
 > Mudou no `.env`? Reinicie o bot — ele re-seeda a agenda.
 
@@ -34,7 +34,7 @@ Exemplo atual: o Igor trabalha seg–qui 12h–21h, sex 10h–19h, sáb 8h–14h
 |---|---|
 | `livre` | Slot disponível (gerado/limpo automaticamente) |
 | `agendado` | Reservado pelo cliente (aguardando a reunião) |
-| `confirmada` / `cancelada` | Próximos passos (São manuais/previstos para o Igor confirmar) |
+| `confirmada` / `cancelada` | Próximos passos (São manuais/previstos para o responsável confirmar) |
 
 ## Arquivos
 

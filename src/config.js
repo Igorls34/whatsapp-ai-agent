@@ -39,6 +39,14 @@ function parseWorkSchedule(value) {
 export const config = {
   nodeEnv: process.env.NODE_ENV || 'development',
 
+  // Identidade (template genérico — personalize via .env)
+  negocio: {
+    // Nome do negócio/profissional (personalize via NEGOCIO_NOME)
+    nome: process.env.NEGOCIO_NOME || 'Assistente Virtual',
+    // Como o modelo chama o humano responsável pelo negócio
+    responsavel: process.env.NEGOCIO_RESPONSAVEL || 'o responsável pelo negócio',
+  },
+
   // WhatsApp
   waSessionDir: process.env.WA_SESSION_DIR || './.sessions',
 
@@ -48,7 +56,7 @@ export const config = {
   // Emergências
   emergencyNumber: process.env.EMERGENCY_NUMBER || '',
 
-  // Notificações (agendamentos) — WhatsApp e email do Igor
+  // Notificações (agendamentos) — WhatsApp e email do responsável
   notificacoes: {
     whatsapp: process.env.NOTIF_WHATSAPP || '',
     email: process.env.NOTIF_EMAIL || '',
@@ -115,7 +123,7 @@ export const config = {
     // Texto de apresentação (usado como legenda da imagem)
     texto:
       process.env.WELCOME_TEXT ||
-      'Olá! 😊 Eu sou o assistente virtual do Igor Dev. Ele trabalha com instalação e ativação de softwares, montagem de PC e suporte técnico. Como posso te ajudar?',
+      'Olá! 😊 Eu sou o assistente virtual deste negócio. Posso apresentar os serviços, tirar dúvidas e ajudar a agendar um atendimento. Como posso te ajudar?',
     // Cliente que não interage há esse tempo (horas) recebe boas-vindas de novo
     inativoHoras: Number(process.env.WELCOME_INACTIVE_HORAS || 24),
   },

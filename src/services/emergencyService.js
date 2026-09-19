@@ -1,4 +1,4 @@
-// notificar_emergencia(): avisa o Igor quando o cliente precisa de atendimento urgente
+// notificar_emergencia(): avisa o responsável quando o cliente precisa de atendimento urgente
 export function createEmergencyService({ getSocket, config }) {
   return {
     async notificar({ telefone, mensagem, nome = null }) {

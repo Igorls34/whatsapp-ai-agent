@@ -12,17 +12,17 @@ O bot envia emails de agendamento usando o SMTP do Gmail **gratuito**, via **sen
 
 2. **Crie a senha de app:**
    - Acesse https://myaccount.google.com/apppasswords
-   - Nomeie, ex.: `Bot Igor Dev` → **Criar**.
+   - Nomeie, ex.: `Assistente Virtual` → **Criar**.
    - Copie a senha gerada (16 caracteres, ex.: `abcd efgh ijkl mnop`).
 
 3. **Preencha o `.env`** do projeto:
 
 ```env
-NOTIF_EMAIL=igorlaurindo49@gmail.com
+NOTIF_EMAIL=seu@email.com
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_SECURE=true
-SMTP_USER=igorlaurindo49@gmail.com
+SMTP_USER=seu@email.com
 SMTP_PASS=abcd efgh ijkl mnop        # a senha de app
 ```
 

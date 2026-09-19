@@ -18,7 +18,7 @@ npm run admin        # sobe o servidor HTTP local
 - Banner informativo reforça: o bot **nunca informa valores** ao cliente.
 - **Navegação SPA** por rotas (`#/servicos`, `#/agenda`) no cabeçalho: muda de aba sem recarregar, com histórico/voltar do navegador funcionando. A **Agenda** é carregada sob demanda — só quando a rota abre pela primeira vez.
 - A **Agenda** é exibida **agrupada por dia** com cabeçalho (`Hoje — Qui, 17/09`, `Amanhã …`), coluna de **Hora** separada e contagem de registros por dia.
-- **Tema visual** segue o portfólio do Igor (fundo escuro `#050505`, cards `#0a0a0a`, gradiente azul→violeta→rosa, fonte Inter).
+- **Tema visual** segue o portfólio do negócio (fundo escuro `#050505`, cards `#0a0a0a`, gradiente azul→violeta→rosa, fonte Inter).
 
 ## API (REST)
 
@@ -56,7 +56,7 @@ curl -X POST http://127.0.0.1:3000/api/servicos \
 
 ## Por que existe
 
-O catálogo é a **fonte da verdade** que o LLM usa para apresentar serviços (regra do prompt: só exibe o que está na tabela `servicos`). Antes, editar exigia SQL/manual; o painel dá autonomia ao Igor, sem código e sem depender do bot estar parado.
+O catálogo é a **fonte da verdade** que o LLM usa para apresentar serviços (regra do prompt: só exibe o que está na tabela `servicos`). Antes, editar exigia SQL/manual; o painel dá autonomia ao responsável, sem código e sem depender do bot estar parado.
 
 ## Arquivos
 
@@ -68,4 +68,4 @@ O catálogo é a **fonte da verdade** que o LLM usa para apresentar serviços (r
 
 ## Pontos de atenção
 
-- **Valores:** o campo `preco` da tabela **não é exibido nem editado** no painel, e o bot nunca o repassa ao cliente (decisão de negócio: orçamento só com o Igor). Serviços cadastrados podem ter `preco` preenchido no banco (referência interna), mas ele não aparece nem é enviado.
+- **Valores:** o campo `preco` da tabela **não é exibido nem editado** no painel, e o bot nunca o repassa ao cliente (decisão de negócio: orçamento só com o responsável). Serviços cadastrados podem ter `preco` preenchido no banco (referência interna), mas ele não aparece nem é enviado.

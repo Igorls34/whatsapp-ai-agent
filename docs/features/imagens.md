@@ -12,7 +12,7 @@ O bot pode enviar ao cliente **imagens e GIFs catalogados** (logo, catálogo vis
 
 ```json
 {
-  "logo_igor":          { "arquivo": "logo.png",               "descricao": "Logo do Igor Dev" },
+  "logo":              { "arquivo": "logo.png",               "descricao": "Logo do negócio" },
   "catalogo_servicos":  { "arquivo": "catalogo-servicos.png",  "descricao": "Tabela com os serviços oferecidos" },
   "boasvindas_gif":     { "arquivo": "boasvindas.gif",         "descricao": "GIF de boas-vindas" }
 }

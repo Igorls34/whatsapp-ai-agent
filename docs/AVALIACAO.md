@@ -28,7 +28,7 @@ O projeto tem um teste de fumaça via `npm run test:llm` que valida o ciclo inte
 ```
 ✅ opencode server OK (v1.18.31)
 🤖 Resposta do modelo:
-"Oi! 😊 Recebi sua mensagem, sim! Estou aqui para ajudar com os serviços do Igor Dev —
+"Oi! 😊 Recebi sua mensagem, sim! Estou aqui para ajudar com os serviços oferecidos —
  suporte de computadores, desenvolvimento de software e soluções sob medida.
  Como posso te ajudar hoje? 💻✨"
 🔧 Teste do parser de ferramenta: {"name":"agendar_reuniao","arguments":{...}}
@@ -42,8 +42,8 @@ Além do smoke test, o agente foi avaliado em **cenários reais** durante o uso 
 
 | Cenário | Entrada | Comportamento esperado | Resultado |
 |---|---|---|---|
-| **Apresentação de serviços** | "O que o Igor faz?" | Lista **só** o que está no catálogo `servicos`, agrupado por categoria | ✅ |
-| **Recusa de preço** | "Quanto custa?" | **Nunca** informa valor; sugere reunião com o Igor | ✅ |
+| **Apresentação de serviços** | "O que este serviço faz?" | Lista **só** o que está no catálogo `servicos`, agrupado por categoria | ✅ |
+| **Recusa de preço** | "Quanto custa?" | **Nunca** informa valor; sugere reunião com o responsável | ✅ |
 | **Agendamento** | "Quero agendar" | Oferece **máx. 3** horários livres reais e confirma só após a ferramenta `agendar_reuniao` retornar sucesso | ✅ |
 | **Serviço fora do catálogo** | "Faz app de delivery?" | Não inventa; destaca solução sob medida + sugere reunião | ✅ |
 | **Memória entre conversas** | Cliente que já falou antes | Reconhece o retorno ("Olá novamente!") usando o resumo persistido | ✅ |
@@ -59,10 +59,10 @@ Além do smoke test, o agente foi avaliado em **cenários reais** durante o uso 
 Cada resposta enviada ao cliente é avaliada (manual ou automaticamente) contra estes critérios:
 
 - **Aderência ao catálogo** — zero serviços inventados; tudo vem da tabela `servicos`.
-- **Guardrails** — zero preços, zero promessas de confirmação sem ferramenta, zero impersonação do Igor.
+- **Guardrails** — zero preços, zero promessas de confirmação sem ferramenta, zero impersonação do responsável.
 - **Formato** — mensagens curtas (2–4 frases), máximo de 3 horários por mensagem, emojis moderados.
 - **Contexto** — usou o resumo persistido do cliente quando aplicável.
-- **Honestidade** — quando não sabe, diz que vai verificar com o Igor (nunca inventa).
+- **Honestidade** — quando não sabe, diz que vai verificar com o responsável (nunca inventa).
 
 ## Métricas observáveis
 

@@ -39,7 +39,7 @@ npm run web
 ## O que NÃO existe aqui (vs. WhatsApp)
 
 - **Ferramentas que dependem do WhatsApp** (`enviar_imagem`, notificações por WhatsApp, emergência via WhatsApp) respondem com aviso amigável ao modelo — o chat vira texto puro.
-- **Agendamentos**: funcionam normalmente (o Igor é notificado por email/WhatsApp, conforme config).
+- **Agendamentos**: funcionam normalmente (o responsável é notificado por email/WhatsApp, conforme config).
 - **Rate limit** por sessão: ~12 mensagens/minuto (`429`) — evita abuso em site público.
 - **Bloqueio por abuso**: comportamento abusivo chama a ferramenta `bloquear_cliente` e o chat fica **indisponível por 1h** (retorno `indisponivel: true`). Em tudo isso, os **gargalos** também valem aqui (ver [backpressure](backpressure.md)).
 

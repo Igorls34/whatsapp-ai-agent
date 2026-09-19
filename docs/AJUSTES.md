@@ -1,6 +1,6 @@
 # Ajustes — serviços, agenda, boas-vindas, imagens
 
-Guia prático para o Igor ajustar o bot sem precisar de código.
+Guia prático para o responsável ajustar o bot sem precisar de código.
 
 > Para explicações de como cada funcionalidade funciona por dentro, veja [FEATURES.md](FEATURES.md) — cada uma tem página dedicada.
 
@@ -24,14 +24,14 @@ node -e "const db=require('better-sqlite3')('data/agent.db'); console.log(db.pre
 Ou, de forma mais amigável, use uma ferramenta de SQLite (ex.: [DB Browser for SQLite](https://sqlitebrowser.org/)) abrindo `data/agent.db` e editando a tabela `servicos`.
 
 Regras:
-- **Valores nunca são falados pelo bot** — por regra de negócio, o bot não informa preços de nenhum serviço. Se o cliente perguntar quanto custa, o bot remete ao Igor e sugere agendar uma reunião para ele passar o orçamento. Mesmo que a coluna `preco` esteja preenchida (referência interna do Igor), o bot não a lê nem a repassa.
+- **Valores nunca são falados pelo bot** — por regra de negócio, o bot não informa preços de nenhum serviço. Se o cliente perguntar quanto custa, o bot remete ao responsável e sugere agendar uma reunião para ele passar o orçamento. Mesmo que a coluna `preco` esteja preenchida (referência interna do responsável), o bot não a lê nem a repassa.
 - `ativo = 0` esconde o serviço sem apagar (útil em promoções/lançamentos).
 - `ordem` controla a exibição (menor primeiro).
 - **Dica:** os serviços podem ser gerenciados sem SQL pelo painel web (`npm run admin`) — inclui lista com toggle de ativo. Detalhes: [painel-admin.md](features/painel-admin.md).
 
 ## Agenda e horários de trabalho
 
-Os horários **bloqueados** (quando o Igor trabalha e não agenda) ficam na variável `WORK_SCHEDULE` do `.env`:
+Os horários **bloqueados** (quando o atendimento está indisponível para agendamento) ficam na variável `WORK_SCHEDULE` do `.env`:
 
 ```env
 WORK_SCHEDULE=1-4:12-21,5:10-19,6:8-14
@@ -65,7 +65,7 @@ Trocas de horário fechadas também aparecem no prompt do bot automaticamente (t
 
 ```json
 {
-  "logo_igor": { "arquivo": "logo.png", "descricao": "Logo do Igor Dev" }
+  "logo": { "arquivo": "logo.png", "descricao": "Logo do negócio" }
 }
 ```
 
@@ -75,8 +75,8 @@ O LLM verá a seção "Imagens disponíveis" no contexto e poderá acionar a fer
 
 ## Notificações de agendamento
 
-- `NOTIF_WHATSAPP` — número do Igor (ex.: `5524998190280`) para aviso no WhatsApp.
-- `NOTIF_EMAIL` — email do Igor.
+- `NOTIF_WHATSAPP` — número do responsável (ex.: `5524998190280`) para aviso no WhatsApp.
+- `NOTIF_EMAIL` — email do responsável.
 - `SMTP_*` — credenciais Gmail (ver `docs/SMTP.md`).
 
 Quando um cliente agenda, o bot envia o horário + cliente para os dois canais.

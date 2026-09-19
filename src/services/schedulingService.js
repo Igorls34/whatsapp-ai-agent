@@ -13,7 +13,7 @@ export function createSchedulingService(repos) {
           ok: false,
           motivo: resultado.motivo,
           msg_usuario:
-            'A agenda do Igor está bem cheia essa semana corrida 🚀! Mas vou deixar seu contato sinalizado para ele te retornar por aqui assim que abrir uma brecha, tudo bem?',
+            'A agenda está bem cheia nessa semana corrida 🚀! Mas vou deixar seu contato sinalizado para a equipe te retornar por aqui assim que abrir uma brecha, tudo bem?',
         };
       }
 

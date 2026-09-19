@@ -20,7 +20,7 @@ socket.ev.on('connection.update', async (update) => {
     console.log(`[test-send] conectado. Enviando teste para ${alvo}...`);
     try {
       const jid = `${alvo}@s.whatsapp.net`;
-      await socket.sendMessage(jid, { text: 'Teste do bot IA do Igor ✅ Conexão, descriptografia e envio funcionando.' });
+      await socket.sendMessage(jid, { text: 'Teste do bot IA ✅ Conexão, descriptografia e envio funcionando.' });
       console.log('[test-send] enviada com sucesso.');
     } catch (err) {
       console.error('[test-send] erro ao enviar:', err);

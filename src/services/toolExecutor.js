@@ -47,7 +47,7 @@ export function createToolExecutor({ repos, getSocket, config, dbEnqueue, canal 
             return await availability.consultar(args);
           case 'agendar_reuniao': {
             const resultado = await scheduling.agendar(args);
-            // Notifica o Igor via WhatsApp e email quando o agendamento é confirmado
+            // Notifica o responsável via WhatsApp e email quando o agendamento é confirmado
             if (resultado.ok && resultado.agendamento) {
               notifications.notificarAgendamento({
                 data_hora: resultado.agendamento.data_hora,
@@ -76,7 +76,7 @@ export function createToolExecutor({ repos, getSocket, config, dbEnqueue, canal 
           ok: false,
           motivo: 'banco_indisponivel',
           msg_usuario:
-            'Estou com instabilidade na minha memória agora 😅. Se puder, me passe o essencial aqui mesmo que eu repasso ao Igor.',
+            'Estou com instabilidade na minha memória agora 😅. Se puder, me passe o essencial aqui mesmo que eu repasso à equipe.',
         };
       }
     },

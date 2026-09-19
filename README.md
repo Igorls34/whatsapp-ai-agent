@@ -1,8 +1,8 @@
 <div align="center">
 
-# 🤖 WhatsApp AI Agent — Igor Dev
+# 🤖 WhatsApp AI Agent
 
-**Assistente virtual 24/7 para WhatsApp** — um **agente de IA** que atende os clientes do Igor, apresenta os serviços dele, agenda reuniões respeitando os horários de trabalho e lembra de cada cliente entre conversas. O "cérebro" é o **próprio opencode rodando localmente** (`opencode serve`) — sem API keys para começar.
+**Assistente virtual 24/7 para WhatsApp** — um **agente de IA** que atende os clientes do negócio, apresenta os serviços, agenda reuniões respeitando os horários de trabalho e lembra de cada cliente entre conversas. O "cérebro" é o **próprio opencode rodando localmente** (`opencode serve`) — sem API keys para começar.
 
 [![Node.js ≥ 20](https://img.shields.io/badge/Node.js-%E2%89%A5%2020-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
 [![JavaScript ESM](https://img.shields.io/badge/JavaScript-ESM-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](#)
@@ -35,7 +35,7 @@ O coração do projeto: um atendente virtual que conversa de verdade com os clie
 
 - **Atendimento 24/7** via Baileys, com reconexão automática.
 - **Catálogo de serviços** como fonte da verdade (tabela `servicos`): o LLM apresenta **apenas** o que está cadastrado (nome + descrição).
-- **Valores? Nunca.** O bot **não informa preços** ao cliente — orçamento é passado pessoalmente pelo Igor (*detalhe em [agente-ia.md](docs/features/agente-ia.md)*).
+- **Valores? Nunca.** O bot **não informa preços** ao cliente — orçamento é passado pessoalmente pelo responsável (*detalhe em [agente-ia.md](docs/features/agente-ia.md)*).
 - **Contexto por cliente:** resumo persistido + sessão viva no opencode (uma sessão por cliente).
 - **Ferramentas via protocolo `===TOOL===…===END===`:** o modelo chama funções de negócio executadas localmente.
 - **Mensagens múltiplas:** respostas divididas em até 3 mensagens (`|||`, 1,5s) + **boas-vindas** para cliente novo/inativo.
@@ -52,7 +52,7 @@ Implementadas **em cima do núcleo**, cada uma com página própria:
 |---------|-----------|-----------------|
 | 📅 **Agendamento inteligente** | Agenda reuniões fora dos horários de trabalho; slots gerados sozinhos | [agendamento.md](docs/features/agendamento.md) |
 | 🧠 **Memória de longo prazo** | Lembra de cada cliente entre conversas (resumo em SQLite) | [memoria.md](docs/features/memoria.md) |
-| 🔔 **Notificações** | Avisa o Igor de agendamentos (WhatsApp + email) e emergências | [notificacoes.md](docs/features/notificacoes.md) |
+| 🔔 **Notificações** | Avisa o responsável de agendamentos (WhatsApp + email) e emergências | [notificacoes.md](docs/features/notificacoes.md) |
 | 🖼️ **Imagens / GIFs** | Envia logo, catálogo visual e GIF de boas-vindas via `manifest.json` | [imagens.md](docs/features/imagens.md) |
 | 🛠️ **Painel admin (CRUD)** | Página web + API REST para gerenciar os serviços sem SQL | [painel-admin.md](docs/features/painel-admin.md) |
 | 💬 **Chat Web** | Página de chat para conversar com o **mesmo agente** no navegador | [chat-web.md](docs/features/chat-web.md) |
@@ -80,7 +80,7 @@ flowchart LR
 
 | Elemento | O que é | Papel no fluxo |
 |---|---|---|
-| **Cliente** | A pessoa que conversa com o Igor pelo WhatsApp | Envia mensagens e recebe as respostas do bot |
+| **Cliente** | A pessoa que conversa com o negócio pelo WhatsApp | Envia mensagens e recebe as respostas do bot |
 | **messageHandler** (`src/whatsapp/messageHandler.js`) | Orquestrador de cada mensagem | Resolve o telefone, trata mídia/boas-vindas, injeta contexto e envia a resposta final |
 | **agent** (`src/llm/agent.js`) | Loop de raciocínio que conversa com o LLM | Monta o prompt e executa ferramentas quando o LLM pede |
 | **LLM local** (`opencode serve :4096`) | O "cérebro": modelo de IA rodando no opencode | Gera as respostas do bot |
@@ -158,7 +158,7 @@ npm run test:llm
 npm start
 ```
 
-- Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do Igor (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho).
+- Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do responsável (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho).
 - Depois, a sessão fica salva em `.sessions` e **não precisa escanear de novo**.
 - O bot gera e limpa a agenda sozinho (start + a cada 12h) — não precisa rodar `npm run seed`.
 
@@ -198,7 +198,7 @@ SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Sch
 
 - **`clientes`** — telefone (pk), nome, resumo (memória de longo prazo), timestamps.
 - **`agenda`** — slots com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Slots livres passados são limpos automaticamente.
-- **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria** (ex: Design Gráfico, Engenharia, Montagem e Hardware…). O campo `preco` (se existir) **não** é lido nem repassado — valores só saem com o Igor. Edite sem SQL via `npm run admin`.
+- **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria** (ex: Design Gráfico, Engenharia, Montagem e Hardware…). O campo `preco` (se existir) **não** é lido nem repassado — valores só saem com o responsável. Edite sem SQL via `npm run admin`.
 - **`avisos_pendentes`** — fila de notificações de processos sem WhatsApp (web/painel) → entregues pelo bot (ver [backpressure](docs/features/backpressure.md)).
 
 ---
@@ -216,8 +216,8 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 | `SCHEDULE_START` / `SCHEDULE_END` | `7` / `24` | Janela do dia em que slots podem existir. |
 | `SLOT_MINUTES` | `60` | Duração de cada slot (1h). |
 | `HORIZON_DAYS` | `14` | Dias à frente do auto-seed. |
-| `NOTIF_WHATSAPP` | vazio | Número do Igor p/ avisar agendamentos via WhatsApp. |
-| `NOTIF_EMAIL` | vazio | Email do Igor p/ avisar agendamentos. |
+| `NOTIF_WHATSAPP` | vazio | Número do responsável p/ avisar agendamentos via WhatsApp. |
+| `NOTIF_EMAIL` | vazio | Email do responsável p/ avisar agendamentos. |
 | `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS` | Gmail | SMTP (senha de app). |
 | `EMERGENCY_NUMBER` | vazio | Número que recebe alertas de urgência. |
 | `IMAGENS_ATIVO` | `false` | Habilita envio de imagens/GIFs ao cliente. |
@@ -254,7 +254,7 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 | [`@whiskeysockets/baileys`](https://github.com/WhiskeySockets/Baileys) | Conexão com o WhatsApp (socket, sessão) | [GitHub + Wiki](https://github.com/WhiskeySockets/Baileys/wiki) · [Getting Started](https://github.com/WhiskeySockets/Baileys/wiki/Getting-Started) |
 | [`better-sqlite3`](https://github.com/WiseLibs/better-sqlite3) | Banco de dados local (SQLite) | [GitHub](https://github.com/WiseLibs/better-sqlite3) · [API completa](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md) |
 | [`dotenv`](https://github.com/motdotla/dotenv) | Variáveis de ambiente do `.env` | [GitHub + usage](https://github.com/motdotla/dotenv?tab=readme-ov-file#usage) |
-| [`nodemailer`](https://nodemailer.com/) | Emails de notificação ao Igor | [**nodemailer.com**](https://nodemailer.com/) · [API](https://nodemailer.com/message/) |
+| [`nodemailer`](https://nodemailer.com/) | Emails de notificação ao responsável | [**nodemailer.com**](https://nodemailer.com/) · [API](https://nodemailer.com/message/) |
 | [`qrcode-terminal`](https://github.com/gtanner/qrcode-terminal) | QR Code de login no terminal | [GitHub](https://github.com/gtanner/qrcode-terminal) |
 
 **Dependência global (fora do projeto):**

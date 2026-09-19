@@ -22,7 +22,7 @@
 |---|---|---|
 | 📅 **Agendamento inteligente** | Agenda reuniões respeitando os horários de trabalho, gera slots sozinho e fica indisponível com a agenda cheia | [agendamento.md](features/agendamento.md) |
 | 🧠 **Memória de longo prazo** | Lembra de cada cliente entre conversas (resumo em SQLite + histórico por sessão) | [memoria.md](features/memoria.md) |
-| 🔔 **Notificações** | Avisa o Igor de agendamentos (WhatsApp + email) e recebe emergências | [notificacoes.md](features/notificacoes.md) |
+| 🔔 **Notificações** | Avisa o responsável de agendamentos (WhatsApp + email) e recebe emergências | [notificacoes.md](features/notificacoes.md) |
 | 🖼️ **Imagens / GIFs** | Envia logo, catálogo visual e GIF de boas-vindas via `manifest.json` | [imagens.md](features/imagens.md) |
 | 🛠️ **Painel admin (CRUD)** | Página web para gerenciar os serviços sem SQL, com API REST | [painel-admin.md](features/painel-admin.md) |
 | 💬 **Chat Web** | Página simples para conversar com o mesmo agente no navegador (portfolio) | [chat-web.md](features/chat-web.md) |

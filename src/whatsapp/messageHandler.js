@@ -77,7 +77,7 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     // Edge case: mensagens de mídia (imagem, vídeo, áudio, sticker...). O bot só
     // entende texto no momento; avisa e pede pra digitar a demanda.
     if (midia && socket) {
-      const aviso = `Agora só consigo ler mensagens de texto por aqui 🙏. Pode digitar sua demanda pra mim? Assim o Igor já sabe como te ajudar, tudo bem? 😊`;
+      const aviso = `Agora só consigo ler mensagens de texto por aqui 🙏. Pode digitar sua demanda pra mim? Assim a equipe já sabe como te ajudar, tudo bem? 😊`;
       await sendPacer.run(() => socket.sendMessage(remoteJid, { text: aviso }));
       try {
         memory.add(telefone, 'assistant', aviso);
@@ -138,7 +138,7 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     } catch (err) {
       console.error('[llm] erro ao gerar resposta:', err);
       reply =
-        'Agora não consegui responder 😅, mas já vi sua mensagem. Assim que o Igor pegar no celular ele responde. Me chama de novo em instantes se precisar.';
+        'Agora não consegui responder 😅, mas já vi sua mensagem. Assim que a equipe pegar no celular ela responde. Me chama de novo em instantes se precisar.';
     }
 
     if (reply && socket) {

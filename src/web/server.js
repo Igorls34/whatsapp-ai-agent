@@ -127,7 +127,7 @@ async function responder({ sessionId, mensagem }) {
   } catch (err) {
     console.error('[web] erro ao gerar resposta:', err);
     reply =
-      'Agora não consegui responder 😅, mas já vi sua mensagem. Assim que o Igor pegar no celular ele responde — ou pode me chamar de novo em instantes.';
+      'Agora não consegui responder 😅, mas já vi sua mensagem. Assim que a equipe pegar no celular ela responde — ou pode me chamar de novo em instantes.';
   }
 
   // Memória de longo prazo (resumo periódico)
@@ -228,7 +228,7 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, {
         ok: true,
         sessionId,
-        atendente: 'Assistente Virtual do Igor Dev',
+        atendente: 'Assistente Virtual',
       });
     }
 

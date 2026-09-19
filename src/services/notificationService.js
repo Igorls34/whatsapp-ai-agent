@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-// Serviço de notificações: envia alertas pro Igor via WhatsApp e email
+// Serviço de notificações: envia alertas ao responsável via WhatsApp e email
 // quando um agendamento é realizado (no bot ou no chat web).
 export function createNotificationService({ getSocket, config, dbEnqueue }) {
   const { notificacoes } = config;
@@ -47,7 +47,7 @@ export function createNotificationService({ getSocket, config, dbEnqueue }) {
     if (!t) return { ok: false, motivo: 'email_nao_configurado' };
     try {
       await t.sendMail({
-        from: `"Bot Igor Dev" <${notificacoes.smtp.user}>`,
+        from: `"${config.negocio.nome} (Assistente Virtual)" <${notificacoes.smtp.user}>`,
         to: notificacoes.email,
         subject: assunto,
         text: texto,

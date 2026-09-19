@@ -1,4 +1,5 @@
 import { buildSystemPrompt } from '../prompt/systemPrompt.js';
+import { config } from '../config.js';
 import {
   withToolProtocol,
   parseToolEnvelope,
@@ -13,14 +14,14 @@ const MAX_ROUNDS = 6;
 // ferramentas de negócio neste processo via protocolo de texto (===TOOL===).
 // Monta a seção de catálogo de serviços para o system prompt.
 // Baseia-se SOMENTE no que veio do banco (lista editável manualmente).
-// IMPORTANTE: o catálogo NUNCA inclui preços — valores só são passados pelo
-// Igor pessoalmente, nunca pelo bot.
+// Importante: o catálogo NUNCA inclui preços — valores só são passados pelo
+// responsável pessoalmente, nunca pelo bot.
 export function buildServiceCatalog(servicos = []) {
   if (!servicos.length) {
     return (
-      '## Catálogo de Serviços do Igor\n' +
-      '(catálogo vazio — apresente o Igor sob demanda: desenvolvimento de software, sistemas ' +
-      'e automações, mas SEM listar serviços específicos até o Igor preencher.)'
+      '## Catálogo de Serviços\n' +
+      '(catálogo vazio — apresente o negócio sob demanda: desenvolvimento de software, sistemas ' +
+      'e automações, mas SEM listar serviços específicos até o catálogo ser preenchido.)'
     );
   }
   const linhas = [];
@@ -36,7 +37,7 @@ export function buildServiceCatalog(servicos = []) {
       linhas.push(`- ${s.nome}${s.descricao ? `: ${s.descricao}` : ''}`);
     }
   }
-  return `## Catálogo de Serviços do Igor\n${linhas.join('\n')}`;
+  return `## Catálogo de Serviços\n${linhas.join('\n')}`;
 }
 
 export function buildImageCatalog(imagens = []) {
@@ -70,7 +71,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
       const reply = await adapter.runTurn({ sessionKey: telefone, system, text: turno });
 
       if (!reply || !reply.trim()) {
-        return 'Estou sem resposta no momento 😅. Quer que eu chame o Igor pra te atender?';
+        return 'Estou sem resposta no momento 😅. Quer que eu fale com a equipe pra te atender?';
       }
 
       const call = parseToolEnvelope(reply);
@@ -80,7 +81,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
         // Rede de segurança: nunca deixa protocolo de ferramenta chegar ao cliente.
         if (reply.includes(TOOL_BEGIN) || reply.includes(TOOL_END)) {
           console.warn('[agent] resposta com marcador de ferramenta não interpretável — bloqueado');
-          return 'Estou com instabilidade agora 😅. Quer que eu chame o Igor pra te atender?';
+          return 'Estou com instabilidade agora 😅. Quer que eu fale com a equipe pra te atender?';
         }
         return reply;
       }
@@ -90,7 +91,7 @@ export function createAgent({ adapter, executor, canal = 'whatsapp' }) {
       turno = `${buildToolResultMessage(call.name, result)}\n\nContinue, por favor.`;
     }
 
-    return 'Parece que não consegui concluir isso agora 😅. Quer que eu chame o Igor pra te atender?';
+    return 'Parece que não consegui concluir isso agora 😅. Quer que eu fale com a equipe pra te atender?';
   }
 
   return { run };

@@ -1,7 +1,7 @@
 {
-  "logo_igor": {
+  "logo": {
     "arquivo": "logo.png",
-    "descricao": "Logo do Igor Dev"
+    "descricao": "Logo do negócio"
   },
   "catalogo_servicos": {
     "arquivo": "catalogo-servicos.png",

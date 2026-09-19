@@ -1,4 +1,4 @@
-# Guia do Operador (Igor)
+# Guia do Operador
 
 Como rodar, parar e acompanhar o bot no dia a dia.
 

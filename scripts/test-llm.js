@@ -21,7 +21,7 @@ try {
 
 const reply = await adapter.complete({
   system: withToolProtocol(buildSystemPrompt()),
-  text: 'Olá! Estou testando o agente do Igor. Apenas confirme que recebeu esta mensagem.',
+  text: 'Olá! Estou testando o agente. Apenas confirme que recebeu esta mensagem.',
   title: 'whatsapp-agent:smoke',
 });
 console.log('🤖 Resposta do modelo:');

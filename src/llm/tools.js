@@ -6,7 +6,7 @@ const tools = [
     function: {
       name: 'consultar_disponibilidade',
       description:
-        'Consulta a agenda do Igor e retorna os horários livres para os próximos dias. Use quando o cliente quiser agendar uma reunião, orçamento ou papo técnico.',
+        'Consulta a agenda de atendimento e retorna os horários livres para os próximos dias. Use quando o cliente quiser agendar uma reunião, orçamento ou papo técnico.',
       parameters: {
         type: 'object',
         properties: {
@@ -24,7 +24,7 @@ const tools = [
     function: {
       name: 'agendar_reuniao',
       description:
-        'Reserva um horário na agenda do Igor. Use SOMENTE depois que o cliente confirmar um horário que você ofereceu. O argumento data_hora deve usar exatamente o formato retornado por consultar_disponibilidade (ex: 2026-09-15T14:00).',
+        'Reserva um horário na agenda de atendimento. Use SOMENTE depois que o cliente confirmar um horário que você ofereceu. O argumento data_hora deve usar exatamente o formato retornado por consultar_disponibilidade (ex: 2026-09-15T14:00).',
       parameters: {
         type: 'object',
         properties: {
@@ -78,7 +78,7 @@ const tools = [
     function: {
       name: 'notificar_emergencia',
       description:
-        'Aciona o canal de emergência do Igor para casos urgentes: cliente reclamando/enfurecido, bug crítico em produção, ou pedido explícito de falar com um humano agora.',
+        'Aciona o canal de emergência para casos urgentes: cliente reclamando/enfurecido, bug crítico em produção, ou pedido explícito de falar com um humano agora.',
       parameters: {
         type: 'object',
         properties: {
@@ -115,7 +115,7 @@ const tools = [
           },
           imagem: {
             type: 'string',
-            description: 'Apelido da imagem no manifest (ex: "logo_igor", "catalogo_servicos", "boasvindas_gif").',
+            description: 'Apelido da imagem no manifest (ex: "logo", "catalogo_servicos", "boasvindas_gif").',
           },
           legenda: {
             type: 'string',
