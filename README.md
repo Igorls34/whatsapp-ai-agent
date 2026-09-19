@@ -122,6 +122,21 @@ O envio/recebimento usa a lib **Baileys** diretamente (socket próprio, sessão 
 
 ## <a id="como-rodar"></a> ⚙️ Como rodar
 
+**Plug-and-play:** em máquina com [Node.js ≥ 20](https://nodejs.org), são **3 comandos**:
+
+| Passo | O quê | Comando |
+|---|---|---|
+| **1** | Instalar dependências do projeto | `npm install` |
+| **2** | Configurar (wizard: identidade, agenda, notificações — instala o opencode se faltar) | `npm run setup` |
+| **3** | Ligar tudo (sobe a IA + o bot, e reinicia sozinho se cair) | `npm start` |
+
+Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do responsável (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho). Depois, a sessão fica salva em `.sessions` e **não precisa escanear de novo**.
+
+> [!TIP]
+> O `npm start` é um **supervisor**: sobe o `opencode serve` (:4096) sozinho se ele não estiver no ar e **reinicia o bot** se ele cair. Quem preferir processos separados, veja abaixo o fluxo manual.
+
+## Opcional: fluxo manual (processos separados)
+
 O projeto precisa de **2 processos rodando ao mesmo tempo** (IA + bot), em **2 terminais** (terminais 3 e 4 são opcionais: painel admin e chat web).
 
 | Passo | O quê | Comando |
@@ -155,7 +170,7 @@ npm run test:llm
 **5 · Terminal B — iniciar o bot do WhatsApp:**
 
 ```bash
-npm start
+npm run start:bot     # apenas o bot (sem supervisor); ou npm start p/ reinício automático
 ```
 
 - Na **primeira vez**, um QR Code aparece no terminal: escaneie com o WhatsApp do Igor (WhatsApp → Ajustes → Aparelhos conectados → Conectar aparelho).
@@ -235,8 +250,10 @@ Veja o [`.env.example`](.env.example) completo. Principais variáveis:
 
 | Comando | Ação |
 |---|---|
+| `npm run setup` | Wizard de configuração (identidade, agenda, notificações; instala o opencode) |
+| `npm start` | Supervisor: sobe IA + bot e reinicia se cair (plug-and-play) |
+| `npm run start:bot` | Só o bot (espera o `serve` estar no ar) |
 | `npm run serve` | Sobe o opencode server (:4096) — outra janela |
-| `npm start` | Inicia o bot do WhatsApp |
 | `npm run dev` | Inicia com watch |
 | `npm run admin` | Painel web (CRUD de serviços) em http://127.0.0.1:3000 |
 | `npm run web` | Chat web em http://127.0.0.1:4000 |
