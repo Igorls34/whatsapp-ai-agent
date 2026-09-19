@@ -8,9 +8,11 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node start.js",
+    "start:bot": "node src/index.js",
     "dev": "node --watch src/index.js",
     "serve": "opencode serve --port 4096",
+    "setup": "node scripts/setup.js",
     "admin": "node src/admin/server.js",
     "web": "node src/web/server.js",
     "seed": "node scripts/seed.js",
