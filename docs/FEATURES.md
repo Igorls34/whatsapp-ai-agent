@@ -33,6 +33,7 @@
 
 | Guia | Conteúdo |
 |---|---|
+| 🔧 [**REFERENCIA.md**](REFERENCIA.md) | Arquitetura, banco de dados, variáveis de ambiente (`.env`) e comandos |
 | 🧙 [**OPERACAO.md**](OPERACAO.md) | Como rodar, parar e acompanhar o bot no dia a dia (operador) |
 | 🎚️ [**AJUSTES.md**](AJUSTES.md) | Ajustes rápidos sem código: serviços, agenda, boas-vindas, imagens |
 | 📧 [**SMTP.md**](SMTP.md) | Como gerar a senha de app do Gmail para os emails do bot |

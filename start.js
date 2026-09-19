@@ -1,24 +1,32 @@
 #!/usr/bin/env node
-// Supervisor plug-and-play:
-//  - garante o opencode serve (porta 4096) no ar, subindo-o como filho se não estiver;
-//  - sobe o bot (src/index.js);
-//  - reinicia o bot se cair, e reinicia o opencode server se ele morrer.
+// Supervisor plug-and-play — UM comando sobe tudo:
+//   - IA local:  opencode serve  (http://127.0.0.1:4096)
+//   - Bot:       src/index.js    (WhatsApp)
+//   - Painel:    src/admin/server.js  (http://127.0.0.1:3000)
+//   - Chat web:  src/web/server.js    (http://127.0.0.1:4000)
+//
+// Cada serviço é reiniciado sozinho (com backoff) se cair; os serviços com
+// HTTP primeiro checam se já existe alguém no ar — se já estiver, não duplica.
+// Ctrl+C encerra tudo junto.
 //
 // Uso: npm start   (ou: node start.js)
 import 'dotenv/config';
 import { spawn } from 'node:child_process';
+import { config } from './src/config.js';
 
-const SERVIDOR_URL = process.env.OPENCODE_SERVER_URL || 'http://127.0.0.1:4096';
-const PING_MS = 2000;
+const IA_URL = config.llm.opencode.url;
+const PING_MS = 2_000;
 const ESPERAR_SERVIDOR_MS = 90_000;
-const REINICIAR_BOT_BASE_MS = 3_000;
-const REINICIAR_BOT_MAX_MS = 30_000;
-const REINICIAR_OPCODE_MS = 5_000;
+const REINICIAR_BASE_MS = 3_000;
+const REINICIAR_MAX_MS = 30_000;
 const RESETAR_BACKOFF_APOS_MS = 30_000;
 
-let abertoOpencode = null;
-let bot = null;
 let forwardExit = false;
+
+function log(prefixo, msg) {
+  const hora = new Date().toLocaleTimeString('pt-BR');
+  console.log(`[${hora}][${prefixo}] ${msg}`);
+}
 
 function parseUrl(url) {
   try {
@@ -29,11 +37,11 @@ function parseUrl(url) {
   }
 }
 
-async function servidorSaude() {
+async function saudavel(url) {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 1_500);
-    const res = await fetch(`${SERVIDOR_URL}/global/health`, { signal: ctrl.signal });
+    const res = await fetch(url, { signal: ctrl.signal });
     clearTimeout(t);
     return res.ok;
   } catch {
@@ -41,97 +49,112 @@ async function servidorSaude() {
   }
 }
 
-function log(prefixo, msg) {
-  const hora = new Date().toLocaleTimeString('pt-BR');
-  console.log(`[${hora}][${prefixo}] ${msg}`);
-}
+function criarSupervisao({ nome, comando, args, url = null, esperarAtivo = false, env = {}, shell = false }) {
+  const estado = { filho: null, criadoEm: 0, backoff: REINICIAR_BASE_MS };
 
-async function aguardarServidorDisponivel() {
-  const inicio = Date.now();
-  while (Date.now() - inicio < ESPERAR_SERVIDOR_MS) {
-    if (await servidorSaude()) return true;
-    await new Promise((r) => setTimeout(r, PING_MS));
+  function subir() {
+    log('supervisor', `Subindo ${nome}…`);
+    estado.filho = spawn(comando, args, { shell, stdio: 'inherit', env: { ...process.env, ...env } });
+    estado.criadoEm = Date.now();
+    estado.filho.on('exit', (code, signal) => {
+      if (forwardExit) return;
+      const rodouDeLongo = Date.now() - estado.criadoEm >= RESETAR_BACKOFF_APOS_MS;
+      if (rodouDeLongo) estado.backoff = REINICIAR_BASE_MS;
+      const delay = rodouDeLongo ? REINICIAR_BASE_MS : Math.min(estado.backoff, REINICIAR_MAX_MS);
+      log('supervisor', `${nome} saiu (code=${code} signal=${signal}) — reiniciando em ${delay}ms…`);
+      estado.backoff = Math.min(estado.backoff * 2, REINICIAR_MAX_MS);
+      setTimeout(() => {
+        if (!forwardExit) subir();
+      }, delay);
+    });
+    estado.filho.on('error', (err) => {
+      log('supervisor', `Falha ao iniciar ${nome}: ${err.message}`);
+      if (nome.includes('opencode')) {
+        log('supervisor', 'Instale com: npm install -g opencode-ai   (ou rode: npm run setup)');
+      }
+    });
+    return estado.filho;
   }
-  return false;
+
+  async function verificarECobrir() {
+    if (url && (await saudavel(url))) {
+      log('supervisor', `${nome} já está no ar ✅ (${url})`);
+      return null;
+    }
+    if (nome.includes('opencode')) {
+      log('supervisor', `${nome} não responde em ${url} — subindo…`);
+    }
+    subir();
+    if (url && esperarAtivo) {
+      const inicio = Date.now();
+      while (Date.now() - inicio < ESPERAR_SERVIDOR_MS) {
+        if (await saudavel(url)) {
+          log('supervisor', `${nome} pronto ✅`);
+          return estado.filho;
+        }
+        await new Promise((r) => setTimeout(r, PING_MS));
+      }
+      log('supervisor', `⚠️ ${nome} não respondeu no tempo — seguindo mesmo assim.`);
+    }
+    return estado.filho;
+  }
+
+  return { verificarECobrir, matar: () => estado.filho?.kill('SIGTERM') };
 }
 
-function subirOpencode() {
-  const { hostname, port } = parseUrl(SERVIDOR_URL) || { hostname: '127.0.0.1', port: 4096 };
-  log('supervisor', `opencode serve não responde em ${SERVIDOR_URL} — subindo na ${hostname}:${port}…`);
-  const child = spawn('opencode', ['serve', '--port', String(port)], {
+function parar() {
+  forwardExit = true;
+  log('supervisor', 'Encerrando (Ctrl+C recebido)…');
+  for (const s of servicos) s.matar();
+  process.exit(0);
+}
+
+const servicos = [];
+
+async function main() {
+  const { hostname, port } = parseUrl(IA_URL) || { hostname: '127.0.0.1', port: 4096 };
+
+  const ia = criarSupervisao({
+    nome: 'IA local (opencode serve)',
+    comando: 'opencode',
+    args: ['serve', '--port', String(port)],
+    url: `${IA_URL}/global/health`,
+    esperarAtivo: true,
     shell: true,
-    stdio: 'inherit',
     env: {
-      ...process.env,
       OPENCODE_SERVER_PASSWORD: process.env.OPENCODE_SERVER_PASSWORD || '',
       ...(process.env.OPENCODE_SERVER_USERNAME
         ? { OPENCODE_SERVER_USERNAME: process.env.OPENCODE_SERVER_USERNAME }
         : {}),
     },
   });
-  child.on('exit', (code, signal) => {
-    if (forwardExit) return;
-    log('supervisor', `opencode serve saiu (code=${code} signal=${signal}) — reiniciando em ${REINICIAR_OPCODE_MS}ms…`);
-    setTimeout(() => {
-      if (!forwardExit) subirOpencode();
-    }, REINICIAR_OPCODE_MS);
+
+  const bot = criarSupervisao({
+    nome: 'bot do WhatsApp',
+    comando: process.execPath,
+    args: ['src/index.js'],
   });
-  child.on('error', (err) => {
-    log('supervisor', `Falha ao iniciar opencode: ${err.message}`);
-    log('supervisor', 'Instale com: npm install -g opencode-ai   (ou rode: npm run setup)');
+
+  const painel = criarSupervisao({
+    nome: 'painel admin',
+    comando: process.execPath,
+    args: ['src/admin/server.js'],
+    url: `http://127.0.0.1:${config.admin.port}`,
   });
-  abertoOpencode = child;
-}
 
-async function garantirServidor() {
-  if (await servidorSaude()) {
-    log('supervisor', 'opencode server já está no ar ✅');
-    return;
-  }
-  subirOpencode();
-  const ok = await aguardarServidorDisponivel();
-  if (!ok) {
-    log('supervisor', '⚠️ Não consegui confirmar o opencode serve no tempo. O bot vai tentar mesmo assim — se não responder, ele avisa o cliente.');
-  } else {
-    log('supervisor', 'opencode server pronto ✅');
-  }
-}
-
-function subirBot() {
-  log('supervisor', 'Iniciando o bot do WhatsApp…');
-  bot = spawn(process.execPath, ['src/index.js'], { stdio: 'inherit' });
-  botStartedAt = Date.now();
-  bot.on('exit', (code, signal) => {
-    if (forwardExit) return;
-    const motivo = code === 0 ? 'encerrou normalmente' : `saiu (code=${code} signal=${signal})`;
-    const rodouDeLongo = Date.now() - botStartedAt >= RESETAR_BACKOFF_APOS_MS;
-    if (rodouDeLongo) backoff = REINICIAR_BOT_BASE_MS;
-    const delay = rodouDeLongo ? REINICIAR_BOT_BASE_MS : Math.min(backoff, REINICIAR_BOT_MAX_MS);
-    log('supervisor', `Bot ${motivo} — reiniciando em ${delay}ms…`);
-    backoff = Math.min(backoff * 2, REINICIAR_BOT_MAX_MS);
-    setTimeout(() => {
-      if (!forwardExit) subirBot();
-    }, delay);
+  const web = criarSupervisao({
+    nome: 'chat web',
+    comando: process.execPath,
+    args: ['src/web/server.js'],
+    url: `http://${config.web.host}:${config.web.port}`,
   });
-  bot.on('error', (err) => {
-    log('supervisor', `Erro ao iniciar o bot: ${err.message}`);
-  });
-}
 
-function parar() {
-  forwardExit = true;
-  log('supervisor', 'Encerrando (Ctrl+C recebido)…');
-  if (bot) bot.kill('SIGTERM');
-  if (abertoOpencode) abertoOpencode.kill('SIGTERM');
-  process.exit(0);
-}
+  servicos.push(ia, bot, painel, web);
 
-let botStartedAt = 0;
-let backoff = REINICIAR_BOT_BASE_MS;
-
-async function main() {
-  await garantirServidor();
-  subirBot();
+  await ia.verificarECobrir();
+  painel.verificarECobrir();
+  web.verificarECobrir();
+  bot.verificarECobrir();
 }
 
 process.on('SIGINT', parar);
@@ -140,6 +163,6 @@ process.on('SIGTERM', parar);
 main().catch((err) => {
   forwardExit = true;
   console.error('[supervisor] falha fatal:', err);
-  if (abertoOpencode) abertoOpencode.kill('SIGTERM');
+  for (const s of servicos) s.matar();
   process.exit(1);
 });
