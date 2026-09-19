@@ -30,10 +30,10 @@ Não precisa ser programador: se você conseguir abrir uma janela de **terminal*
 
 ### 1 · Baixe (clone) o projeto
 
-Você precisa do **Git** instalado ([baixe aqui](https://git-scm.com/downloads) se não tiver). No terminal, copie e cole:
+Você precisa do **Git** instalado ([baixe aqui](https://git-scm.com/downloads) se não tiver). No site do repositório, clique no botão verde **Code → HTTPS** e copie a URL. Depois, no terminal:
 
 ```bash
-$ git clone https://github.com/Igorls34/whatsapp-ai-agent.git
+$ git clone <URL_DO_REPOSITORIO>   # cole aqui a URL que você copiou
 $ cd whatsapp-ai-agent
 ```
 
