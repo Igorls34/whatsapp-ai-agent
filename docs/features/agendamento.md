@@ -43,3 +43,14 @@ Exemplo atual: o Igor trabalha seg–qui 12h–21h, sex 10h–19h, sáb 8h–14h
 - `src/services/schedulingService.js` — `agendar_reuniao`
 - `src/config.js` → `config.agenda` — parse de `WORK_SCHEDULE` etc.
 - Tabela `agenda` em `src/db/schema.js`
+
+## 🔮 Futuro: reagendamento da reunião
+
+Hoje, depois de agendar, **mudar o horário é manual** (o Igor remarca pelos próximos passos `confirmada`/`cancelada`). Uma evolução natural é deixar o **próprio cliente remarcar** pela conversa:
+
+- **Cancelar/remarcar** a própria reunião por WhatsApp (novo fluxo + ferramenta `reagendar_reuniao`), devolvendo o slot para `livre` e reutilizando, se quiser, o slot padrão de replanejamento (o mesmo do problema em `agenda_cheia`, que já existe no `agendamento.md`).
+- **Validações:** só permite remarcar dentro de uma janela (ex.: até N horas antes), não conflitar com a nova disponibilidade e confirmar explicitamente antes de trocar.
+- **Notificação** ao Igor quando o cliente remarca (email/WhatsApp), igual ao agendamento.
+- **Versionar o histórico:** manter o slot original como `agendado` marcado como "remarcado" (coluna `reativo`/`history`) para rastreio — exige mudança no schema.
+
+> Item de **roadmap**: nada disso existe ainda. É um passo natural para o Igor tocar depois de validar o fluxo de agendamento no dia a dia.
