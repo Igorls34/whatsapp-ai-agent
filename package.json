@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-ai-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Assistente virtual 24/7 do Igor Dev (Igor Laurindo) para WhatsApp com memória de clientes e agendamento via function calling, usando o opencode local como IA",
   "type": "module",
   "main": "src/index.js",
@@ -16,7 +16,11 @@
     "admin": "node src/admin/server.js",
     "web": "node src/web/server.js",
     "seed": "node scripts/seed.js",
-    "test:llm": "node scripts/test-llm.js"
+    "test": "node --test \"test/*.test.js\"",
+    "test:llm": "node scripts/test-llm.js",
+    "release:patch": "npm version patch -m 'chore(release): v%s'",
+    "release:minor": "npm version minor -m 'chore(release): v%s'",
+    "release:major": "npm version major -m 'chore(release): v%s'"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.24",

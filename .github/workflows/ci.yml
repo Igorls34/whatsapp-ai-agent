@@ -44,3 +44,6 @@ jobs:
             console.log('OK db+repos + persona.negocio=' + p.negocio);
             db.close();
           "
+
+      - name: Testes unitários (node:test)
+        run: npm test

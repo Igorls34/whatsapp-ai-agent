@@ -1,6 +1,9 @@
 # Dependências
 node_modules/
 
+# Cobertura de testes
+coverage/
+
 # Sessões do WhatsApp (não versionar credenciais)
 .sessions/
 .sessions-backup/
