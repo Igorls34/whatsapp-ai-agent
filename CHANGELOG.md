@@ -2,6 +2,16 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.3.0] — 2026-11-15
+
+### Adicionado
+- **`src/core/brain.js`** — `createBrain()` (cérebro compartilhado: banco + repositórios + memória + adapter + summarizer + imageService) e `createStore()` (banco + repositórios para o painel).
+- **`src/conversation/service.js`** — orquestrador de turno agnóstico de canal (`separarPartes`, `responderComAgente`, `manterMemoria`, `tocarInteracao`).
+- Teste `test/conversation.test.js`.
+
+### Alterado
+- `src/index.js`, `src/web/server.js`, `src/admin/server.js` e `src/whatsapp/messageHandler.js` passam a usar o cérebro compartilhado — refactor **sem mudança de comportamento** (remove a duplicação de setup que existia em 3 processos).
+
 ## [0.2.0] — 2026-11-15
 
 ### Adicionado

@@ -4,14 +4,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { config } from '../config.js';
-import { openDatabase } from '../db/database.js';
-import { createRepositories } from '../db/repositories.js';
-import { createConversationMemory } from '../memory/conversationMemory.js';
-import { createLocalOpencodeAdapter } from '../llm/localOpencodeAdapter.js';
-import { createAgent } from '../llm/agent.js';
-import { createSummarizer } from '../llm/summarizer.js';
-import { createToolExecutor } from '../services/toolExecutor.js';
-import { createImageService } from '../services/imageService.js';
+import { createBrain } from '../core/brain.js';
+import { createConversationService } from '../conversation/service.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PAGINA_PATH = path.join(__dirname, 'index.html');
@@ -21,30 +15,20 @@ const LIMITE_MSGS_POR_MINUTO = 12;
 let atendimentosEmCurso = 0;
 
 // ---------------------------------------------------------------------------
-// Setup: mesmos componentes do bot do WhatsApp, sem o transporte Baileys.
-// getSocket() = null: ferramentas que dependem do WhatsApp retornam aviso
-// amigável ao LLM em vez de quebrar.
+// Setup: MESMO cérebro do bot do WhatsApp (via createBrain), sem o transporte
+// Baileys. Sem socket (socketRef = null), ferramentas que dependem do WhatsApp
+// retornam aviso amigável ao LLM em vez de quebrar.
 // ---------------------------------------------------------------------------
-const db = openDatabase();
-const repos = createRepositories(db);
-const memory = createConversationMemory({
-  keepMessages: config.memory.keepMessages,
-  summarizeEvery: config.memory.summarizeEvery,
-});
-const adapter = createLocalOpencodeAdapter();
-const executor = createToolExecutor({
-  repos,
-  getSocket: () => null,
-  config,
+const brain = createBrain({ config });
+const { repos, memory } = brain;
+const conversation = createConversationService({ brain, config });
+const { agent } = brain.createChannel({
   canal: 'web',
   dbEnqueue: (texto) => repos.enfileirarAviso(texto),
 });
-const agent = createAgent({ adapter, executor, canal: 'web' });
-const summarizer = createSummarizer({ adapter });
-const imageService = createImageService({ getSocket: () => null, config });
 const pagina = fs.readFileSync(PAGINA_PATH, 'utf8');
 
-adapter
+brain.adapter
   .health()
   .then(({ version }) => {
     console.log(`[web] opencode server OK (v${version}). Modelo: ${config.llm.opencode.model || 'default da máquina'}`);
@@ -115,44 +99,18 @@ async function responder({ sessionId, mensagem }) {
 
   let reply;
   try {
-    const servicos = repos.listarServicosAtivos();
-    const imagens = config.imagens.ativo ? imageService.listar() : [];
-    reply = await agent.run({
-      telefone: sessionId,
-      resumo: contexto.resumo,
-      mensagem: texto,
-      servicos,
-      imagens,
-    });
+    reply = await conversation.responderComAgente({ agent, id: sessionId, resumo: contexto.resumo, mensagem: texto });
   } catch (err) {
     console.error('[web] erro ao gerar resposta:', err);
     reply =
       'Agora não consegui responder 😅, mas já vi sua mensagem. Assim que o Igor pegar no celular ele responde — ou pode me chamar de novo em instantes.';
   }
 
-  // Memória de longo prazo (resumo periódico)
-  if (memory.isSummaryDue(sessionId)) {
-    try {
-      const novoResumo = await summarizer.summarize({
-        telefone: sessionId,
-        resumoAnterior: contexto.resumo,
-        historico: memory.history(sessionId),
-      });
-      if (novoResumo) repos.atualizarResumo({ telefone: sessionId, resumo: novoResumo });
-      memory.resetSummaryCounter(sessionId);
-      console.log(`[web] resumo de ${sessionId} atualizado`);
-    } catch (err) {
-      console.error('[web] falha ao gerar resumo:', err);
-    }
-  }
+  // Memória de longo prazo (resumo periódico) + última interação
+  await conversation.manterMemoria({ id: sessionId, resumoAnterior: contexto.resumo });
+  conversation.tocarInteracao(sessionId);
 
-  try {
-    repos.tocarUltimaInteracao(sessionId);
-  } catch (err) {
-    /* banco offline: ignore */
-  }
-
-  for (const parte of String(reply).split('|||').map((p) => p.trim()).filter(Boolean)) {
+  for (const parte of conversation.separarPartes(reply)) {
     try {
       memory.add(sessionId, 'assistant', parte);
     } catch (_) {
@@ -162,10 +120,7 @@ async function responder({ sessionId, mensagem }) {
 
   return {
     reply,
-    partes: String(reply)
-      .split('|||')
-      .map((p) => p.trim())
-      .filter(Boolean),
+    partes: conversation.separarPartes(reply),
   };
 }
 

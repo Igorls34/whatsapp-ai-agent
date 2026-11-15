@@ -1,14 +1,16 @@
-// Orquestra o fluxo RAG por mensagem recebida:
+// Orquestra o fluxo RAG por mensagem recebida (canal WhatsApp):
 // 1. Busca memória persistente do cliente no banco (por número)
 // 2. Injeta o resumo no system prompt do LLM (a thread fica na sessão do opencode)
 // 3. Envia a resposta gerada via WhatsApp (podem ser várias mensagens com |||)
 // 4. Periodicamente, gera o novo resumo da interação e grava no banco
+//
+// A parte "agnóstica de canal" (rodar o agente, resumir, separar partes) fica em
+// src/conversation/service.js; aqui fica o que é específico do WhatsApp
+// (boas-vindas, mídia, envio pelo socket).
 
 import { createSendPacer } from '../services/backpressure.js';
 import { textoBoasVindas } from '../prompt/persona.js';
 
-// Separa respostas em múltiplas mensagens (|||) para ficar natural no WhatsApp
-export const MSG_SEPARATOR = '|||';
 const MSG_DELAY_MS = 1500;
 
 function sleep(ms) {
@@ -21,11 +23,9 @@ function ehVazamentoProtocolo(texto) {
 }
 
 // Envia uma resposta (possivelmente dividida em várias mensagens) ao cliente
-async function enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory) {
-  const partes = String(reply)
-    .split(MSG_SEPARATOR)
-    .map((p) => p.trim())
-    .filter(Boolean)
+async function enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory, conversation) {
+  const partes = conversation
+    .separarPartes(reply)
     .filter((p) => !ehVazamentoProtocolo(p));
 
   if (partes.length === 0) {
@@ -45,7 +45,7 @@ async function enviarResposta(sendPacer, socket, remoteJid, telefone, reply, mem
   }
 }
 
-export function createMessageHandler({ repos, getSocket, agent, summarizer, memory, imageService, config, pacer }) {
+export function createMessageHandler({ repos, getSocket, agent, memory, imageService, config, pacer, conversation }) {
   const sendPacer = pacer || createSendPacer({ minGapMs: config.limites.envioMinGapMs });
 
   // Cliente que não interagiu nos últimos N horas é tratado como "novo" (recebe boas-vindas).
@@ -135,9 +135,7 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     // 3. LLM (opencode local) com function calling via protocolo de texto
     let reply;
     try {
-      const servicos = repos.listarServicosAtivos();
-      const imagens = config.imagens.ativo ? imageService.listar() : [];
-      reply = await agent.run({ telefone, resumo: contexto.resumo, mensagem: text, servicos, imagens });
+      reply = await conversation.responderComAgente({ agent, id: telefone, resumo: contexto.resumo, mensagem: text });
     } catch (err) {
       console.error('[llm] erro ao gerar resposta:', err);
       reply =
@@ -145,31 +143,14 @@ export function createMessageHandler({ repos, getSocket, agent, summarizer, memo
     }
 
     if (reply && socket) {
-      await enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory);
+      await enviarResposta(sendPacer, socket, remoteJid, telefone, reply, memory, conversation);
     } else {
       console.warn('[msg] resposta vazia ou socket indisponível — nada enviado');
     }
 
     // 4. De tempos em tempos: resume a conversa e persiste na memória de longo prazo
-    if (memory.isSummaryDue(telefone)) {
-      try {
-        const novoResumo = await summarizer.summarize({
-          telefone,
-          resumoAnterior: contexto.resumo,
-          historico: memory.history(telefone),
-        });
-        if (novoResumo) repos.atualizarResumo({ telefone, resumo: novoResumo });
-        memory.resetSummaryCounter(telefone);
-        console.log(`[memoria] resumo de ${telefone} atualizado`);
-      } catch (err) {
-        console.error('[memoria] falha ao gerar resumo:', err);
-      }
-    }
+    await conversation.manterMemoria({ id: telefone, resumoAnterior: contexto.resumo });
 
-    try {
-      repos.tocarUltimaInteracao(telefone);
-    } catch (err) {
-      /* banco offline: ignore */
-    }
+    conversation.tocarInteracao(telefone);
   };
 }

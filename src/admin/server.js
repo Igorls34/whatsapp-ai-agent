@@ -2,8 +2,7 @@ import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { openDatabase } from '../db/database.js';
-import { createRepositories } from '../db/repositories.js';
+import { createStore } from '../core/brain.js';
 import { config } from '../config.js';
 import {
   carregarPersona,
@@ -28,8 +27,7 @@ const MIME = {
   '.woff2': 'font/woff2',
 };
 
-const db = openDatabase();
-const repos = createRepositories(db);
+const { repos } = createStore(config);
 
 const html = fs.readFileSync(HTML_PATH, 'utf8');
 

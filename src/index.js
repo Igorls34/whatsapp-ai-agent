@@ -1,21 +1,22 @@
 import 'dotenv/config';
 import { config } from './config.js';
-import { openDatabase } from './db/database.js';
-import { createRepositories } from './db/repositories.js';
-import { createConversationMemory } from './memory/conversationMemory.js';
-import { createLocalOpencodeAdapter } from './llm/localOpencodeAdapter.js';
-import { createAgent } from './llm/agent.js';
-import { createSummarizer } from './llm/summarizer.js';
-import { createToolExecutor } from './services/toolExecutor.js';
-import { createImageService } from './services/imageService.js';
+import { createBrain } from './core/brain.js';
+import { createConversationService } from './conversation/service.js';
 import { gerarSlots, limparSlotsPassados } from './db/autoSeed.js';
 import { createMessageHandler } from './whatsapp/messageHandler.js';
 import { connectWhatsApp } from './whatsapp/client.js';
 import { createSendPacer } from './services/backpressure.js';
 
 function main() {
-  const db = openDatabase(config.dbPath);
-  const repos = createRepositories(db);
+  // Cérebro compartilhado: banco, repositórios, memória, adapter, summarizer e
+  // imageService são montados UMA vez aqui (e não duplicados por processo).
+  const brain = createBrain({ config });
+  const { repos, memory, imageService } = brain;
+
+  const conversation = createConversationService({ brain, config });
+
+  // Canal WhatsApp: par executor+agent com regras de 'whatsapp'.
+  const { agent } = brain.createChannel({ canal: 'whatsapp' });
 
   // Auto-seed: gera slots livres no startup e a cada 12h; apaga slots passados
   const limparEAseedar = () => {
@@ -27,21 +28,7 @@ function main() {
   limparEAseedar();
   setInterval(limparEAseedar, 12 * 60 * 60 * 1000);
 
-  const memory = createConversationMemory({
-    keepMessages: config.memory.keepMessages,
-    summarizeEvery: config.memory.summarizeEvery,
-  });
-
-  let socketRef = null;
-  const getSocket = () => socketRef;
-
-  // Ponte tools <-> banco
-  const executor = createToolExecutor({ repos, getSocket, config });
-
-  // IA: opencode local (opencode serve)
-  const adapter = createLocalOpencodeAdapter();
-
-  adapter
+  brain.adapter
     .health()
     .then(({ version }) => {
       console.log(`[llm] opencode server OK (v${version}). Modelo: ${config.llm.opencode.model || 'default da máquina'}`);
@@ -50,10 +37,6 @@ function main() {
       console.warn(`[llm] ${err.message}`);
       console.warn('[llm] O bot seguirá no ar, mas responderá com aviso. Rode em outro terminal: opencode serve --port 4096');
     });
-
-  const agent = createAgent({ adapter, executor });
-  const summarizer = createSummarizer({ adapter });
-  const imageService = createImageService({ getSocket, config });
 
   // Entrega avisos enfileirados por processos sem WhatsApp (chat web/painel):
   // agendamentos, emergências etc. Verifica a cada 30s. Cada aviso é tratado
@@ -64,7 +47,7 @@ function main() {
   const MAX_TENTATIVAS_AVISO = 5;
 
   const drenarAvisosPendentes = async () => {
-    const socket = getSocket();
+    const socket = brain.getSocket();
     const numero = config.notificacoes?.whatsapp;
     if (!socket || !numero) return;
     for (const aviso of repos.listarAvisosPendentes()) {
@@ -91,23 +74,24 @@ function main() {
 
   const onMessage = createMessageHandler({
     repos,
-    getSocket,
+    getSocket: brain.getSocket,
     agent,
-    summarizer,
     memory,
     imageService,
     config,
     pacer,
+    conversation,
   });
 
   connectWhatsApp({
     onMessage,
-    onSocket: (socket) => { socketRef = socket; },
-  })
-    .catch((err) => {
-      console.error('[whatsapp] falha ao iniciar:', err);
-      process.exit(1);
-    });
+    onSocket: (socket) => {
+      brain.setSocket(socket);
+    },
+  }).catch((err) => {
+    console.error('[whatsapp] falha ao iniciar:', err);
+    process.exit(1);
+  });
 }
 
 main();
