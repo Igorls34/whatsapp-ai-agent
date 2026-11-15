@@ -1,0 +1,19 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+
+concurrency:
+  group: whatsapp-ai-agent-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Runner self-hosted roda DENTRO do homesrv (LAN), portanto alcança o app local.
+    # Registrado com a label "whatsapp-ai-agent".
+    runs-on: [self-hosted, whatsapp-ai-agent]
+    steps:
+      - name: Deploy local (git pull + npm ci + restart + healthcheck)
+        run: bash /home/igordev/apps/whatsapp-ai-agent/deploy/deploy.sh

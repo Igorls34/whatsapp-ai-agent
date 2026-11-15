@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+
+      - name: Checagem de sintaxe (node --check)
+        run: |
+          set -e
+          for f in $(git ls-files '*.js'); do
+            node --check "$f"
+          done
+
+      - name: Smoke test (config + banco + schema + repos)
+        run: |
+          node --input-type=module -e "
+            import { config } from './src/config.js';
+            import { openDatabase } from './src/db/database.js';
+            import { createRepositories } from './src/db/repositories.js';
+            import { carregarPersona } from './src/prompt/persona.js';
+            const db = openDatabase('/tmp/wa-ci-smoke.db');
+            const repos = createRepositories(db);
+            const p = carregarPersona();
+            console.log('OK config: admin=' + config.admin.port + ' web=' + config.web.port + ' llm=' + config.llm.backend);
+            console.log('OK db+repos + persona.negocio=' + p.negocio);
+            db.close();
+          "
