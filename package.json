@@ -1,6 +1,6 @@
 {
   "name": "whatsapp-ai-agent",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Assistente virtual 24/7 do Igor Dev (Igor Laurindo) para WhatsApp com memória de clientes e agendamento via function calling, usando o opencode local como IA",
   "type": "module",
   "main": "src/index.js",

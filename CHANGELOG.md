@@ -2,6 +2,31 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.4.0] — 2026-11-15
+
+### Adicionado
+- **`src/http/`** — servidor HTTP unificado com router próprio (sem dependências):
+  - `GET /` e `/chat` → chat web no navegador
+  - `GET /admin` → painel de gestão (assets em `/vendor/*`, APIs em `/api/*`)
+  - `GET /qr`, `GET /api/qr`, `GET /qr.png` → pareamento nativo do WhatsApp
+  - `GET /health` → healthcheck do app (banco, LLM e WhatsApp)
+- **`src/app.js`** — aplicação única: cérebro + HTTP + WhatsApp no mesmo processo.
+- **`src/whatsapp/qrState.js`** — estado do QR em memória (sem arquivos/popup).
+- Configuração `HTTP_HOST`/`HTTP_PORT` (padrão `127.0.0.1:4000`).
+- Testes `test/http.test.js` (router, guard do painel e QR).
+
+### Alterado
+- `src/index.js` agora sobe **tudo** (bot + painel + chat + QR + health).
+- `start.js` supervisiona apenas 2 processos: `opencode serve` e o app.
+- `deploy/deploy.sh` faz healthcheck em `/health` (com `HEALTH_URL` configurável).
+- `src/admin/server.js` e `src/web/server.js` viraram modos avulsos finos, reusando as rotas compartilhadas.
+- `src/whatsapp/client.js` expõe `onQr`/`onStatus` e preserva os callbacks na reconexão.
+- `.env.example` documenta a porta única e o pareamento via rede local.
+
+### Removido
+- Popup do Windows, PNG `qr/qr-atual.png` e dependência do servidor Python ad-hoc `:8090`.
+- Servidores HTTP duplicados (painel e chat agora compartilham router e helpers).
+
 ## [0.3.0] — 2026-11-15
 
 ### Adicionado

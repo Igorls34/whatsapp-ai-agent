@@ -120,14 +120,25 @@ export const config = {
     inativoHoras: Number(process.env.WELCOME_INACTIVE_HORAS || 24),
   },
 
-  // Painel admin (CRUD de serviços) — servidor HTTP simples local
+  // Servidor HTTP unificado (chat + painel + QR + health numa porta só).
+  // Padrão: 127.0.0.1:4000 — não expõe nada na rede além do necessário.
+  // Para parear o WhatsApp de outro aparelho, use HTTP_HOST=0.0.0.0 e defina
+  // ADMIN_TOKEN (o painel fica protegido; o chat/QR seguem públicos).
+  http: {
+    host: process.env.HTTP_HOST || process.env.WEB_HOST || '127.0.0.1',
+    port: Number(process.env.HTTP_PORT || process.env.WEB_PORT || 4000),
+  },
+
+  // Painel admin — usado apenas pelo modo avulso (`npm run admin`).
+  // No sistema unificado o painel é servido em /admin na porta `http`.
   admin: {
     port: Number(process.env.ADMIN_PORT || 3000),
     // Se preenchido, o painel exige autenticação (token): envie "Authorization: Bearer TOKEN"
     token: process.env.ADMIN_TOKEN || '',
   },
 
-  // Chat web (portfólio): página + API para conversar com o mesmo agente
+  // Chat web — usado apenas pelo modo avulso (`npm run web`).
+  // No sistema unificado o chat é servido em `/` na porta `http`.
   web: {
     host: process.env.WEB_HOST || '127.0.0.1',
     port: Number(process.env.WEB_PORT || 4000),

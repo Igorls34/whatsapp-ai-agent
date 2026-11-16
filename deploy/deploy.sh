@@ -19,6 +19,8 @@ SERVICE="whatsapp-ai-agent"
 BRANCH="master"
 WAIT_TOTAL_S=60
 WAIT_STEP_S=3
+# Healthcheck do app unificado (ajuste se HTTP_PORT/HTTP_HOST mudarem no .env).
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:4000/health}"
 
 cd "$APP_DIR"
 
@@ -42,11 +44,11 @@ while [ "$elapsed" -lt "$WAIT_TOTAL_S" ]; do
   elapsed=$((elapsed + WAIT_STEP_S))
 
   if systemctl --user is-active --quiet "${SERVICE}"; then
-    if curl -sf http://127.0.0.1:4096/global/health >/dev/null 2>&1; then
-      echo "==> [deploy] OK: serviço ativo e opencode serve respondendo."
+    if curl -sf "${HEALTH_URL}" >/dev/null 2>&1; then
+      echo "==> [deploy] OK: serviço ativo e /health respondendo (HTTP unificado)."
       exit 0
     fi
-    echo "    serviço ativo, aguardando opencode serve ficar saudável..."
+    echo "    serviço ativo, aguardando /health responder..."
   else
     echo "    serviço inativo, aguardando..."
   fi

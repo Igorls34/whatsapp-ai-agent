@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 // Supervisor plug-and-play — UM comando sobe tudo:
 //   - IA local:  opencode serve  (http://127.0.0.1:4096)
-//   - Bot:       src/index.js    (WhatsApp)
-//   - Painel:    src/admin/server.js  (http://127.0.0.1:3000)
-//   - Chat web:  src/web/server.js    (http://127.0.0.1:4000)
+//   - Sistema:   src/index.js    (WhatsApp + chat + painel + QR + health)
 //
-// Cada serviço é reiniciado sozinho (com backoff) se cair; os serviços com
-// HTTP primeiro checam se já existe alguém no ar — se já estiver, não duplica.
-// Ctrl+C encerra tudo junto.
+// O app é UM processo só: o HTTP unificado nasce junto com o bot. Cada serviço
+// é reiniciado sozinho (com backoff) se cair; o opencode primeiro checa se já
+// existe alguém no ar — se já estiver, não duplica. Ctrl+C encerra tudo junto.
 //
 // Uso: npm start   (ou: node start.js)
 import 'dotenv/config';
@@ -129,32 +127,18 @@ async function main() {
     },
   });
 
-  const bot = criarSupervisao({
-    nome: 'bot do WhatsApp',
+  const app = criarSupervisao({
+    nome: 'app (WhatsApp + HTTP unificado)',
     comando: process.execPath,
     args: ['src/index.js'],
+    // O healthcheck sempre bate em localhost (mesmo se o app escutar em 0.0.0.0).
+    url: `http://127.0.0.1:${config.http.port}/health`,
   });
 
-  const painel = criarSupervisao({
-    nome: 'painel admin',
-    comando: process.execPath,
-    args: ['src/admin/server.js'],
-    url: `http://127.0.0.1:${config.admin.port}`,
-  });
-
-  const web = criarSupervisao({
-    nome: 'chat web',
-    comando: process.execPath,
-    args: ['src/web/server.js'],
-    url: `http://${config.web.host}:${config.web.port}`,
-  });
-
-  servicos.push(ia, bot, painel, web);
+  servicos.push(ia, app);
 
   await ia.verificarECobrir();
-  painel.verificarECobrir();
-  web.verificarECobrir();
-  bot.verificarECobrir();
+  app.verificarECobrir();
 }
 
 process.on('SIGINT', parar);
