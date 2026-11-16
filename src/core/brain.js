@@ -15,6 +15,7 @@ import { createToolExecutor } from '../services/toolExecutor.js';
 import { createImageService } from '../services/imageService.js';
 import { createSendPacer } from '../services/backpressure.js';
 import { createOutbox } from '../notifications/outbox.js';
+import { createSettingsManager } from '../settings/manager.js';
 
 // Store: banco + repositórios (uma conexão SQLite). Usado pelo painel admin,
 // que não precisa do restante do cérebro (adapter/agent/...).
@@ -42,6 +43,10 @@ export function createBrain({ config }) {
 
   const imageService = createImageService({ getSocket: () => socketRef, config });
 
+  // Configurações editáveis pelo painel (notificações + horários). Sobrescrevem
+  // o .env quando presentes, valem na hora e ficam em data/settings.json.
+  const settings = createSettingsManager({ filePath: config.settingsPath, config });
+
   // Pacer único do processo: serializa envios no WhatsApp (bot e notificações).
   const pacer = createSendPacer({ minGapMs: config.limites.envioMinGapMs });
 
@@ -51,7 +56,7 @@ export function createBrain({ config }) {
     repos,
     getSocket: () => socketRef,
     pacer,
-    numeroPadrao: config.notificacoes?.whatsapp || '',
+    numeroPadrao: () => settings.notificacoes().whatsapp,
   });
 
   // Registra o socket do WhatsApp e avisa quem espera pela conexão (ex.: outbox).
@@ -80,6 +85,7 @@ export function createBrain({ config }) {
       repos,
       getSocket: getSocket || (() => socketRef),
       config,
+      settings,
       outbox,
       canal,
     });
@@ -96,6 +102,7 @@ export function createBrain({ config }) {
     imageService,
     pacer,
     outbox,
+    settings,
     createChannel,
     health: () => adapter.health(),
     setSocket,

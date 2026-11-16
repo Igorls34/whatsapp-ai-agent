@@ -6,7 +6,7 @@ import nodemailer from 'nodemailer';
 // A entrega no WhatsApp passa pela outbox (src/notifications/outbox.js): envia
 // na hora quando o socket está disponível e, se não estiver, persiste o aviso
 // para entrega assim que o WhatsApp conectar — sem polling entre processos.
-export function createNotificationService({ config, outbox }) {
+export function createNotificationService({ config, settings, outbox }) {
   const { notificacoes } = config;
 
   // Transporter do nodemailer (Gmail SMTP por padrão)
@@ -20,18 +20,26 @@ export function createNotificationService({ config, outbox }) {
     return transporter;
   }
 
+  // Destinos dos avisos: vêm do painel (settings) quando preenchidos; senão do .env.
+  function destinos() {
+    return settings ? settings.notificacoes() : { whatsapp: notificacoes.whatsapp, email: notificacoes.email };
+  }
+
   async function enviarWhatsApp(texto) {
-    if (!notificacoes.whatsapp) return { ok: false, motivo: 'whatsapp_indisponivel' };
-    return outbox.enviar({ telefone: notificacoes.whatsapp, texto });
+    const { whatsapp } = destinos();
+    if (!whatsapp) return { ok: false, motivo: 'whatsapp_indisponivel' };
+    return outbox.enviar({ telefone: whatsapp, texto });
   }
 
   async function enviarEmail(assunto, texto) {
+    const { email } = destinos();
     const t = getTransporter();
     if (!t) return { ok: false, motivo: 'email_nao_configurado' };
+    if (!email) return { ok: false, motivo: 'email_nao_configurado' };
     try {
       await t.sendMail({
         from: `"Bot Igor Dev" <${notificacoes.smtp.user}>`,
-        to: notificacoes.email,
+        to: email,
         subject: assunto,
         text: texto,
       });

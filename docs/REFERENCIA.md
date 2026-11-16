@@ -69,6 +69,8 @@ SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Sch
 - **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria**. O campo `preco` **não** é lido nem repassado — valores só saem com o responsável. Edite sem SQL pelo painel (`npm start` → `/admin`).
 - **`avisos_pendentes`** — caixa de saída (outbox) das notificações de WhatsApp: guarda `texto` + `destino`, sobrevive a restart e é drenada quando o socket conecta (ver [notificações](features/notificacoes.md)).
 
+Além do banco, há **`data/settings.json`** (gitignored): configurações editáveis pelo painel (notificações + horários de trabalho) que **sobrescrevem o `.env`** quando presentes. Ver [AJUSTES.md](AJUSTES.md).
+
 ---
 
 ## 🔧 Configuração (.env)
@@ -85,8 +87,8 @@ Veja o [`.env.example`](../.env.example) completo. Principais variáveis:
 | `SCHEDULE_START` / `SCHEDULE_END` | `7` / `24` | Janela do dia em que slots podem existir. |
 | `SLOT_MINUTES` | `60` | Duração de cada slot (1h). |
 | `HORIZON_DAYS` | `14` | Dias à frente do auto-seed. |
-| `NOTIF_WHATSAPP` | vazio | Número do responsável p/ avisar agendamentos via WhatsApp. |
-| `NOTIF_EMAIL` | vazio | Email do responsável p/ avisar agendamentos. |
+| `NOTIF_WHATSAPP` | vazio | Número do responsável p/ avisar agendamentos via WhatsApp (editável no painel → aba Configurações). |
+| `NOTIF_EMAIL` | vazio | Email do responsável p/ avisar agendamentos (editável no painel). |
 | `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS` | Gmail | SMTP (senha de app). |
 | `EMERGENCY_NUMBER` | vazio | Número que recebe alertas de urgência. |
 | `IMAGENS_ATIVO` | `false` | Habilita envio de imagens/GIFs ao cliente. |

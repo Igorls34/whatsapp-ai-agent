@@ -1,5 +1,3 @@
-import { config } from '../config.js';
-
 function slotTimeToHM(startHour, slotIndex, slotMinutes) {
   const totalMin = startHour * 60 + slotIndex * slotMinutes;
   return { h: Math.floor(totalMin / 60), m: totalMin % 60 };
@@ -27,9 +25,10 @@ export function limparSlotsPassados(repos) {
 }
 
 // Gera slots livres para os próximos horizonDays, pulando horários de trabalho.
+// Recebe `agenda` (parsed) para refletir as configurações do painel na hora.
 // Retorna a quantidade de slots criados.
-export function gerarSlots(repos) {
-  const { workBlocked, scheduleStart, scheduleEnd, slotMinutes, horizonDays } = config.agenda;
+export function gerarSlots(repos, agenda = config.agenda) {
+  const { workBlocked, scheduleStart, scheduleEnd, slotMinutes, horizonDays } = agenda;
   const now = new Date();
   let criados = 0;
 

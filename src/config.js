@@ -8,7 +8,7 @@ function parseHours(value) {
 // Formato: "dias:inicio-fim,dias:inicio-fim"
 // Ex: "1-4:12-21,5:10-19,6:8-14"  (seg-sex com horários distintos, sáb separado)
 // Dias: 0=Dom, 1=Seg ... 6=Sáb. Ranges aceitos (1-4 = seg a qui).
-function parseWorkSchedule(value) {
+export function parseWorkSchedule(value) {
   const workBlocked = {}; // { 1: [{start:12,end:21}], 5: [{start:10,end:19}] }
   if (!value) return workBlocked;
 
@@ -44,6 +44,9 @@ export const config = {
 
   // Banco
   dbPath: process.env.DB_PATH || './data/agent.db',
+
+  // Configurações editáveis pelo painel (settings) — arquivo JSON em data/.
+  settingsPath: process.env.SETTINGS_PATH || './data/settings.json',
 
   // Emergências
   emergencyNumber: process.env.EMERGENCY_NUMBER || '',
@@ -87,6 +90,7 @@ export const config = {
     // Horários de TRABALHO (bloqueados para agendamento).
     // Formato: "dias:inicio-fim,dias:inicio-fim" (dias: 0=Dom..6=Sáb)
     // Ex: "1-4:12-21,5:10-19,6:8-14"
+    workSchedule: process.env.WORK_SCHEDULE || '1-4:12-21,5:10-19,6:8-14',
     workBlocked: parseWorkSchedule(process.env.WORK_SCHEDULE || '1-4:12-21,5:10-19,6:8-14'),
     // Janela mínima/máxima do dia em que slots podem existir (fora do trabalho)
     scheduleStart: Number(process.env.SCHEDULE_START || 7),

@@ -91,6 +91,10 @@ export function createOutbox({
     const socket = typeof getSocket === 'function' ? getSocket() : null;
     if (!socket) return { enviados: 0, falhas: 0, pendentes: repos.contarAvisosPendentes() };
 
+    // numeroPadrao pode ser string ou função (ex.: settings lidos na hora).
+    const destinoPadrao = () =>
+      String(typeof numeroPadrao === 'function' ? numeroPadrao() : numeroPadrao || '').trim();
+
     let enviados = 0;
     let falhas = 0;
 
@@ -101,7 +105,7 @@ export function createOutbox({
       let progresso = false;
 
       for (const aviso of lote) {
-        const destino = String(aviso.destino || numeroPadrao || '').trim();
+        const destino = String(aviso.destino || destinoPadrao() || '').trim();
         if (!destino) {
           repos.removerAviso(aviso.id);
           erro(`aviso ${aviso.id} sem destinatário — descartado`);

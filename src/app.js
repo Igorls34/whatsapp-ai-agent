@@ -12,12 +12,23 @@ import { connectWhatsApp } from './whatsapp/client.js';
 // no mesmo processo. `src/index.js` chama `criarAplicacao().iniciar()`.
 export function criarAplicacao({ config: cfg = config } = {}) {
   const brain = createBrain({ config: cfg });
-  const { repos, memory, imageService, pacer, outbox } = brain;
+  const { repos, memory, imageService, pacer, outbox, settings } = brain;
   const conversation = createConversationService({ brain, config: cfg });
   const qrState = createQrState();
 
   const canalWhatsApp = brain.createChannel({ canal: 'whatsapp' });
   const canalWeb = brain.createChannel({ canal: 'web' });
+
+  const limparEAseedar = () => {
+    try {
+      const removidos = limparSlotsPassados(repos);
+      if (removidos) console.log(`[seed] ${removidos} slots de ontem/anteriores apagados.`);
+      const criados = gerarSlots(repos, settings.agenda());
+      if (criados) console.log(`[seed] ${criados} horários livres gerados/atualizados.`);
+    } catch (err) {
+      console.error('[seed] falha ao gerar/limpar slots:', err.message);
+    }
+  };
 
   const router = criarRouterPadrao({
     config: cfg,
@@ -27,6 +38,7 @@ export function criarAplicacao({ config: cfg = config } = {}) {
     webAgent: canalWeb.agent,
     conversation,
     qrState,
+    onAgendaAlterada: limparEAseedar,
   });
   const servidor = criarServidorHttp({ router });
 
@@ -47,17 +59,6 @@ export function criarAplicacao({ config: cfg = config } = {}) {
   const timers = [];
   let servidorAberto = false;
   let ultimaLimpeza = 0;
-
-  const limparEAseedar = () => {
-    try {
-      const removidos = limparSlotsPassados(repos);
-      if (removidos) console.log(`[seed] ${removidos} slots de ontem/anteriores apagados.`);
-      const criados = gerarSlots(repos);
-      if (criados) console.log(`[seed] ${criados} horários livres gerados/atualizados.`);
-    } catch (err) {
-      console.error('[seed] falha ao gerar/limpar slots:', err.message);
-    }
-  };
 
   // ---------------------------------------------------------------------------
   // Ciclo de vida

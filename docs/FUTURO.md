@@ -17,20 +17,16 @@ Hoje o bot **não conhece o site** do negócio. Quando o cliente pergunta "tem s
 
 ## 🔢 Campo para inserir/editar número e email de notificação
 
-Hoje o número e o email de notificação (agendamento/emergência) são definidos só por env no `.env` (`NOTIF_WHATSAPP` / `NOTIF_EMAIL`) — mudar exige editar o arquivo e reiniciar.
-
-**Roadmap:**
-- Novo campo **"Contatos de notificação"** na aba **Notificações** do painel: número do WhatsApp e email de destino.
-- Salvaria em `data/` (com fallback para as variáveis do `.env` quando vazio), valendo **na hora**, sem reiniciar — igual ao comportamento da persona (`salvarPersona` vale no próximo turno).
-- Continuaria passando pelo `notificationService` atual (`notificar_agendamento` / `notificar_emergencia`), que já lida com WhatsApp + email.
+✅ **Disponível (v0.7.0)** — aba **⚙️ Configurações** do painel: número do WhatsApp e email de destino. Vale na hora, sem reiniciar; fica em `data/settings.json` (com fallback para `NOTIF_WHATSAPP`/`NOTIF_EMAIL` do `.env`). Continuam passando pelo `notificationService` atual.
 
 ## 🕒 Melhor organização dos horários de funcionamento
 
-O bot **já respeita** o expediente (`WORK_SCHEDULE`) para gerar slots de agendamento. O roadmap é deixar a distribuição mais flexível e acertiva para o dia a dia:
+✅ **Parcialmente disponível (v0.7.0)** — o **expediente** (`WORK_SCHEDULE`), a janela do dia (`SCHEDULE_START/END`), a duração do slot e o horizonte agora são editáveis na aba **⚙️ Configurações** do painel (re-seeda a agenda na hora).
 
+Ainda em roadmap:
 - **Pausa para almoço / folga interna:** hoje um horário "livre" pode cair no intervalo do responsável. Planejado: descontar pausas da janela (ex.: `WORK_BREAK=12:00-13:00`), sem slot nessas faixas.
 - **Tratar feriados/temporada:** uma tabela `feriados` (mesmo conceito de `data/persona.json`) para o Igor marcar dias fechados — o auto-seed não gera slots neles.
-- **Tolerância entre slots:** reduzir colisões de agenda (ex.: deixar 15 min de folga entre reuniões) para a reunião anterior nunca "atrasar" a seguinte.
+- **Tolerância entre slots:** reduzir colisões de agenda (ex.: deixar 15 min de folga entre reuniões).
 
 > Estas entram na arquitetura de **agendamento** ([features/agendamento.md](features/agendamento.md)) e reutilizam o `availabilityService` — incluindo a sinalização de "agenda cheia" já existente.
 
@@ -41,6 +37,7 @@ O bot **já respeita** o expediente (`WORK_SCHEDULE`) para gerar slots de agenda
 | Persona personalizável (identidade, tom, guardrails 🔒) | ✅ disponível — [features/persona.md](features/persona.md) |
 | Agendamento inteligente (auto-seed + confirmação) | ✅ disponível — [features/agendamento.md](features/agendamento.md) |
 | Site do negócio (campo) | 🔜 roadmap |
-| Contatos de notificação (campo) | 🔜 roadmap |
-| Organização dos horários (pausas, feriados, folga) | 🔜 roadmap |
+| Contatos de notificação (campo) | ✅ disponível (v0.7.0) — aba Configurações |
+| Horários de funcionamento (expediente/janela/slot) | ✅ disponível (v0.7.0) — aba Configurações |
+| Pausas, feriados, folga entre slots | 🔜 roadmap |
 | Reagendamento pelo cliente | 🔜 roadmap — [features/agendamento.md](features/agendamento.md) |

@@ -42,26 +42,15 @@ Regras:
 
 ## Agenda e horários de trabalho
 
-Os horários **bloqueados** (quando o Igor trabalha e não agenda) ficam na variável `WORK_SCHEDULE` do `.env`:
+**Mais fácil (recomendado):** aba **⚙️ Configurações** do painel (`npm start` → `/admin`). Lá você edita o expediente e a janela de agendamento **sem mexer em código e sem reiniciar** — a agenda é re-seedada na hora.
 
-```env
-WORK_SCHEDULE=1-4:12-21,5:10-19,6:8-14
-```
+Os campos são:
+- **Expediente** (`WORK_SCHEDULE`) — horários **bloqueados** (quando o Igor trabalha e não agenda). Formato `dias:inicio-fim` separado por vírgula (dias: `0`=Dom … `6`=Sáb). Ex.: `1-4:12-21,5:10-19,6:8-14`.
+- **Início/fim do dia** (`SCHEDULE_START`/`SCHEDULE_END`) — janela em que o cliente pode agendar.
+- **Slot** (`SLOT_MINUTES`) — duração de cada horário (ex.: `60` para 1h).
+- **Dias à frente** (`HORIZON_DAYS`) — até quando o auto-seed gera horários livres.
 
-Formato: `dia-inicial-dia-final:hora-inicio-hora-fim`, separado por vírgula. Dias: `0`=Dom, `1`=Seg … `6`=Sáb.
-
-Exemplo — trocar sábado para bloquear 8h–14h e domingo 9h–12h:
-
-```env
-WORK_SCHEDULE=1-4:12-21,5:10-19,6:8-14,0:9-12
-```
-
-Janela em que o cliente pode agendar: `SCHEDULE_START` (ex.: `7`) e `SCHEDULE_END` (ex.: `24`). Slots: `SLOT_MINUTES` (ex.: `60` para 1h).
-
-> Após alterar o `.env`, **reinicie o bot** — ele re-seeda a agenda no start e a cada 12h.
-> Slots `livre` passados são apagados automaticamente; agendamentos feitos não são perdidos.
-
-Trocas de horário fechadas também aparecem no prompt do bot automaticamente (the catálogo de agenda é lido do `.env`).
+> O painel grava em `data/settings.json`. Se o campo ficar **vazio**, vale o valor do `.env` — então dá para continuar usando o `.env` se preferir (mas aí precisa reiniciar o bot).
 
 ## Boas-vindas
 
@@ -86,8 +75,10 @@ O LLM verá a seção "Imagens disponíveis" no contexto e poderá acionar a fer
 
 ## Notificações de agendamento
 
+**Mais fácil (recomendado):** aba **⚙️ Configurações** do painel — preencha o **WhatsApp do Igor** e o **Email do Igor**, clique em salvar, vale na hora (sem reiniciar).
+
 - `NOTIF_WHATSAPP` — número do Igor (ex.: `5524998190280`) para aviso no WhatsApp.
 - `NOTIF_EMAIL` — email do Igor.
-- `SMTP_*` — credenciais Gmail (ver `docs/SMTP.md`).
+- `SMTP_*` — credenciais Gmail (ver `docs/SMTP.md`; continuam no `.env`).
 
 Quando um cliente agenda, o bot envia o horário + cliente para os dois canais.

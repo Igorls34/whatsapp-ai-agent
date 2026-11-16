@@ -189,6 +189,9 @@
       <li class="nav-item" role="presentation">
         <a class="nav-link" id="tab-btn-persona" href="#/persona">Persona</a>
       </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link" id="tab-btn-configuracoes" href="#/configuracoes">⚙️ Configurações</a>
+      </li>
     </ul>
 
     <div class="tab-content">
@@ -388,6 +391,75 @@
         </div>
       </div>
 
+      <!-- ============ ABA CONFIGURAÇÕES ============ -->
+      <div class="tab-pane" id="tab-configuracoes" role="tabpanel">
+        <div class="alert alert-primary d-flex align-items-center gap-2 inline-alert py-2" role="alert">
+          <span>⚙️</span>
+          <span>Estes ajustes valem <strong>na hora</strong>, sem reiniciar o bot. Ficam salvos em <code>data/settings.json</code>.</span>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header d-flex align-items-center justify-content-between gap-2">
+                <span>🔔 Notificações de agendamento</span>
+              </div>
+              <div class="card-body">
+                <form id="conf-notif-form" novalidate>
+                  <label class="form-label" for="conf-notif-whatsapp">WhatsApp do Igor</label>
+                  <input type="text" class="form-control" id="conf-notif-whatsapp" placeholder="5524998190280 (DDI+DDD+número)" />
+                  <div class="form-text">Vazio = usa o valor do <code>.env</code> (<code>NOTIF_WHATSAPP</code>).</div>
+
+                  <label class="form-label mt-3" for="conf-notif-email">Email do Igor</label>
+                  <input type="email" class="form-control" id="conf-notif-email" placeholder="voce@exemplo.com" />
+                  <div class="form-text">Vazio = usa o valor do <code>.env</code> (<code>NOTIF_EMAIL</code>).</div>
+
+                  <button type="submit" class="btn btn-primary mt-3">Salvar notificações</button>
+                  <div class="alert inline-alert d-none mt-2 py-2" id="conf-notif-status" role="status"></div>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+              <div class="card-header d-flex align-items-center justify-content-between gap-2">
+                <span>🕒 Horários de trabalho</span>
+              </div>
+              <div class="card-body">
+                <form id="conf-agenda-form" novalidate>
+                  <label class="form-label" for="conf-agenda-work">Expediente (bloqueado p/ agendamento)</label>
+                  <input type="text" class="form-control" id="conf-agenda-work" placeholder="1-4:12-21,5:10-19,6:8-14" />
+                  <div class="form-text">Formato <code>dias:inicio-fim</code> separado por vírgula (0=Dom … 6=Sáb). Ex.: <code>1-4:12-21,5:10-19</code>.</div>
+
+                  <div class="row g-2 mt-2">
+                    <div class="col-6">
+                      <label class="form-label" for="conf-agenda-start">Início do dia (h)</label>
+                      <input type="number" class="form-control" id="conf-agenda-start" min="0" max="23" />
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label" for="conf-agenda-end">Fim do dia (h)</label>
+                      <input type="number" class="form-control" id="conf-agenda-end" min="1" max="24" />
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label" for="conf-agenda-slot">Slot (min)</label>
+                      <input type="number" class="form-control" id="conf-agenda-slot" min="5" max="240" />
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label" for="conf-agenda-horizon">Dias à frente</label>
+                      <input type="number" class="form-control" id="conf-agenda-horizon" min="1" max="90" />
+                    </div>
+                  </div>
+
+                  <button type="submit" class="btn btn-primary mt-3">Salvar horários</button>
+                  <div class="alert inline-alert d-none mt-2 py-2" id="conf-agenda-status" role="status"></div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ============ ABA SERVIÇOS ============ -->
       <div class="tab-pane show active" id="tab-servicos" role="tabpanel">
         <div class="alert alert-primary d-flex align-items-center gap-2 inline-alert py-2" role="alert">
@@ -532,9 +604,10 @@
     let clientesCarregado = false;
     let personaCarregada = false;
     let whatsappCarregado = false;
+    let configuracoesCarregadas = false;
 
     function rotear() {
-      const rotas = { '#/dashboard': 'tab-dashboard', '#/servicos': 'tab-servicos', '#/agenda': 'tab-agenda', '#/clientes': 'tab-clientes', '#/persona': 'tab-persona', '#/whatsapp': 'tab-whatsapp' };
+      const rotas = { '#/dashboard': 'tab-dashboard', '#/servicos': 'tab-servicos', '#/agenda': 'tab-agenda', '#/clientes': 'tab-clientes', '#/persona': 'tab-persona', '#/whatsapp': 'tab-whatsapp', '#/configuracoes': 'tab-configuracoes' };
       const hash = rotas[location.hash] ? location.hash : '#/dashboard';
       const id = rotas[hash];
       document.querySelectorAll('.nav-tabs .nav-link').forEach((b) =>
@@ -559,6 +632,10 @@
       if (id === 'tab-whatsapp' && !whatsappCarregado) {
         whatsappCarregado = true;
         carregarWhatsapp();
+      }
+      if (id === 'tab-configuracoes' && !configuracoesCarregadas) {
+        configuracoesCarregadas = true;
+        carregarConfiguracoes();
       }
       if (id === 'tab-dashboard') carregarDashboard();
       window.scrollTo(0, 0);
@@ -603,6 +680,63 @@
       atualizarWhatsapp();
       waTimer = setInterval(atualizarWhatsapp, 3000);
     }
+
+    // ---- Configurações (notificações + horários) ----
+    function preencherConfiguracoes(c) {
+      document.getElementById('conf-notif-whatsapp').value = c.notificacoes?.whatsapp ?? '';
+      document.getElementById('conf-notif-email').value = c.notificacoes?.email ?? '';
+      document.getElementById('conf-agenda-work').value = c.agenda?.workSchedule ?? '';
+      document.getElementById('conf-agenda-start').value = c.agenda?.scheduleStart ?? 7;
+      document.getElementById('conf-agenda-end').value = c.agenda?.scheduleEnd ?? 24;
+      document.getElementById('conf-agenda-slot').value = c.agenda?.slotMinutes ?? 60;
+      document.getElementById('conf-agenda-horizon').value = c.agenda?.horizonDays ?? 14;
+    }
+
+    async function carregarConfiguracoes() {
+      try {
+        const { configuracoes } = await api('/api/configuracoes');
+        preencherConfiguracoes(configuracoes);
+      } catch (err) {
+        showStatus(document.getElementById('conf-notif-status'), 'Erro ao carregar: ' + err.message, false);
+      }
+    }
+
+    document.getElementById('conf-notif-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('conf-notif-status');
+      try {
+        const { configuracoes } = await api('/api/configuracoes', 'PUT', {
+          notificacoes: {
+            whatsapp: document.getElementById('conf-notif-whatsapp').value.trim(),
+            email: document.getElementById('conf-notif-email').value.trim(),
+          },
+        });
+        preencherConfiguracoes(configuracoes);
+        showStatus(status, 'Notificações salvas. ✅', true);
+      } catch (err) {
+        showStatus(status, err.message, false);
+      }
+    });
+
+    document.getElementById('conf-agenda-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('conf-agenda-status');
+      try {
+        const { configuracoes } = await api('/api/configuracoes', 'PUT', {
+          agenda: {
+            workSchedule: document.getElementById('conf-agenda-work').value.trim(),
+            scheduleStart: document.getElementById('conf-agenda-start').value,
+            scheduleEnd: document.getElementById('conf-agenda-end').value,
+            slotMinutes: document.getElementById('conf-agenda-slot').value,
+            horizonDays: document.getElementById('conf-agenda-horizon').value,
+          },
+        });
+        preencherConfiguracoes(configuracoes);
+        showStatus(status, 'Horários salvos e agenda re-seedada. ✅', true);
+      } catch (err) {
+        showStatus(status, err.message, false);
+      }
+    });
 
     // ---- Helpers ----
     const esc = (s) =>

@@ -2,6 +2,26 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.7.0] — 2026-11-16
+
+### Adicionado
+- **`src/settings/manager.js`** — configurações editáveis pelo painel, persistidas em `data/settings.json` (gitignored) e que **sobrescrevem o `.env`** quando presentes, valendo na hora.
+- Aba **⚙️ Configurações** no painel admin:
+  - **Notificações de agendamento**: WhatsApp e email do Igor.
+  - **Horários de trabalho**: expediente (`WORK_SCHEDULE`), início/fim do dia, duração do slot e horizonte — re-seeda a agenda imediatamente.
+- Rotas `GET/PUT /api/configuracoes` (guard admin, validação com erro claro em 400).
+- Testes `test/settings.test.js` e `test/configuracoes.test.js`.
+
+### Alterado
+- `src/db/autoSeed.js`: `gerarSlots(repos, agenda)` recebe a agenda (settings) para refletir o painel na hora.
+- `src/notifications/outbox.js`: `numeroPadrao` pode ser função (destino lido dos settings na hora da drenagem).
+- `notificationService` usa os destinos dos settings; `brain` cria o settings manager e o expõe.
+
+## [0.6.2] — 2026-11-16
+
+### Adicionado
+- Aba **📱 WhatsApp** no painel admin: status da conexão + QR code embutido (auto-refresh via `/api/qr` e `/qr.png`), com link para a página `/qr`.
+
 ## [0.6.1] — 2026-11-15
 
 ### Adicionado
