@@ -2,6 +2,17 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.6.1] — 2026-11-15
+
+### Adicionado
+- **`src/version.js`** — versão do app (do `package.json`) e commit opcional (`APP_COMMIT`) como identidade do que está **rodando**.
+- `/health` reporta **`app.versao`/`app.commit`**.
+- Teste `test/health-http.test.js` — sobe um servidor HTTP real e valida `/health` (200 com JSON e 503 quando o banco falha).
+
+### Alterado
+- **`deploy/deploy.sh`** agora prova o que subiu: imprime `commit (versão)`, exporta `APP_COMMIT` para a unit e só considera o deploy OK quando o `/health` no ar **reporta a mesma versão/commit**; caso contrário, faz rollback (e reajusta `APP_COMMIT`).
+- `docs/OPERACAO.md` documenta a resposta do `/health` e a verificação de versão no deploy.
+
 ## [0.6.0] — 2026-11-15
 
 ### Adicionado

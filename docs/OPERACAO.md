@@ -86,12 +86,24 @@ npm start > logs/bot.log 2>&1
 curl -s http://127.0.0.1:4000/health
 ```
 
-Resposta (resumo): `ok`, `db.ok`, `llm.ok`, `whatsapp.conectado`/`qrPendente` e `notificacoes.pendentes` (tamanho da outbox). O `/health` responde **200** quando o processo e o banco estão de pé; **503** se o banco falhar. Sem WhatsApp pareado ou sem `opencode`, o app segue no ar (aparece `conectado: false` / `llm.ok: false`) — não reinicie por isso.
+Resposta (resumo): `ok`, `app.versao`/`app.commit` (o que está **rodando**), `db.ok`, `llm.ok`, `whatsapp.conectado`/`qrPendente` e `notificacoes.pendentes` (tamanho da outbox). O `/health` responde **200** quando o processo e o banco estão de pé; **503** se o banco falhar. Sem WhatsApp pareado ou sem `opencode`, o app segue no ar (aparece `conectado: false` / `llm.ok: false`) — não reinicie por isso.
+
+```json
+{
+  "ok": true,
+  "app": { "versao": "0.6.1", "commit": "ac88885..." },
+  "db": { "ok": true, "erro": null },
+  "llm": { "ok": true, "versao": "0.15.0" },
+  "whatsapp": { "conectado": true, "qrPendente": false },
+  "notificacoes": { "pendentes": 0 }
+}
+```
 
 ## Deploy no servidor (homesrv)
 
 - O deploy roda em `/home/igordev/apps/whatsapp-ai-agent` como unit **systemd de usuário** (`whatsapp-ai-agent`), sem `sudo`.
-- `deploy/deploy.sh`: `git reset --hard origin/master` → `npm ci` → `systemctl --user restart whatsapp-ai-agent` → espera o `/health` responder → **rollback automático** para o commit anterior se falhar.
+- `deploy/deploy.sh`: `git reset --hard origin/master` → `npm ci` → `systemctl --user restart whatsapp-ai-agent` → espera o `/health` responder **e reportar a versão/commit recém-baixados** → **rollback automático** para o commit anterior se o healthcheck ou a versão não baterem.
+- Para isso o app expõe `app.versao`/`app.commit` no `/health` e o deploy exporta `APP_COMMIT` para a unit (`systemctl --user set-environment`).
 - Modelo da unit: [`deploy/whatsapp-ai-agent.service`](../deploy/whatsapp-ai-agent.service).
 - Só push em `master` dispara o deploy (push de branch roda apenas o CI).
 

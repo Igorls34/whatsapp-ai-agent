@@ -137,6 +137,7 @@ test('GET /health reporta a outbox de notificações pendentes', async () => {
   const dados = JSON.parse(res.body);
   assert.equal(res.status, 200);
   assert.equal(dados.ok, true);
+  assert.equal(typeof dados.app?.versao, 'string');
   assert.equal(dados.whatsapp.conectado, true);
   assert.deepEqual(dados.notificacoes, { pendentes: 3 });
 });

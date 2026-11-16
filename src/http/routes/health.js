@@ -5,6 +5,7 @@
 // o healthcheck: sem pareamento ou sem opencode o app segue no ar (o bot avisa
 // o cliente), então reiniciar o serviço não resolveria nada.
 import { json } from '../respond.js';
+import { versaoApp } from '../../version.js';
 
 const LLM_TIMEOUT_MS = 1_500;
 
@@ -52,6 +53,7 @@ export function registrarRotasHealth(router, { brain, qrState }) {
       dbOk ? 200 : 503,
       {
         ok: dbOk,
+        app: versaoApp(),
         uptimeSegundos: Math.floor(process.uptime()),
         db: { ok: dbOk, erro: dbErro },
         llm,
