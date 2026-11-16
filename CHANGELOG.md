@@ -2,6 +2,11 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.7.1] — 2026-11-16
+
+### Alterado
+- Redesenho da aba **Configurações → Horários de trabalho**: expediente semanal em grade (liga/desliga por dia, com hora de início/fim), janela de agendamento em selects e pré-visualização do `WORK_SCHEDULE` em tempo real (antes era um campo de texto bruto).
+
 ## [0.7.0] — 2026-11-16
 
 ### Adicionado

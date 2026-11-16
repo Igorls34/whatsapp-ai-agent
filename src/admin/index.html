@@ -152,6 +152,38 @@
     .alert-danger { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: #ef4444; }
 
     .text-muted { color: var(--muted) !important; }
+
+    /* ---- Configurações: expediente semanal ---- */
+    .conf-semana { display: flex; flex-direction: column; gap: 8px; }
+    .conf-dia {
+      display: grid;
+      grid-template-columns: 96px 74px 1fr 22px 1fr;
+      align-items: center; gap: 8px;
+      padding: 8px 10px;
+      background: #0f0f0f; border: 1px solid var(--border-card); border-radius: 8px;
+      transition: border-color .15s ease;
+    }
+    .conf-dia:hover { border-color: #2c2c2c; }
+    .conf-dia .conf-dia-nome { font-weight: 600; font-size: .84rem; color: var(--ink); }
+    .conf-dia .conf-dia-nome small { display: block; font-weight: 400; font-size: .68rem; color: var(--muted); }
+    .conf-dia .form-switch { margin: 0; }
+    .conf-dia .form-check-label { font-size: .7rem; color: var(--muted); font-weight: 600; }
+    .conf-dia select {
+      background: #111; border: 1px solid #2a2a2a; color: var(--ink);
+      font-size: .82rem; border-radius: 6px; padding: 4px 6px;
+    }
+    .conf-dia select:disabled { opacity: .3; }
+    .conf-dia .conf-sep { text-align: center; color: var(--muted); font-size: .75rem; }
+    .conf-dia.off .conf-dia-nome { color: var(--muted); }
+    .conf-resumo {
+      font-size: .75rem; color: var(--muted);
+      background: rgba(139,92,246,.08); border: 1px solid rgba(139,92,246,.2);
+      padding: 8px 10px; border-radius: 8px;
+    }
+    .conf-resumo code { color: var(--accent); }
+    .conf-divisor {
+      border: none; border-top: 1px solid var(--border-card); margin: 14px 0;
+    }
   </style>
 </head>
 <body>
@@ -399,7 +431,7 @@
         </div>
 
         <div class="row g-3">
-          <div class="col-md-6">
+          <div class="col-md-5">
             <div class="card shadow-sm h-100">
               <div class="card-header d-flex align-items-center justify-content-between gap-2">
                 <span>🔔 Notificações de agendamento</span>
@@ -421,35 +453,55 @@
             </div>
           </div>
 
-          <div class="col-md-6">
+          <div class="col-md-7">
             <div class="card shadow-sm h-100">
               <div class="card-header d-flex align-items-center justify-content-between gap-2">
                 <span>🕒 Horários de trabalho</span>
+                <small>bloqueados para agendamento</small>
               </div>
               <div class="card-body">
                 <form id="conf-agenda-form" novalidate>
-                  <label class="form-label" for="conf-agenda-work">Expediente (bloqueado p/ agendamento)</label>
-                  <input type="text" class="form-control" id="conf-agenda-work" placeholder="1-4:12-21,5:10-19,6:8-14" />
-                  <div class="form-text">Formato <code>dias:inicio-fim</code> separado por vírgula (0=Dom … 6=Sáb). Ex.: <code>1-4:12-21,5:10-19</code>.</div>
 
-                  <div class="row g-2 mt-2">
+                  <label class="form-label">Expediente semanal</label>
+                  <div class="conf-semana" id="conf-semana"><!-- linhas geradas via JS --></div>
+                  <div class="form-text mt-1">Ligue o interruptor nos dias em que o Igor <strong>trabalha</strong> — o bot não oferece esses horários ao cliente.</div>
+
+                  <hr class="conf-divisor" />
+
+                  <label class="form-label">Janela de agendamento</label>
+                  <div class="row g-2">
                     <div class="col-6">
-                      <label class="form-label" for="conf-agenda-start">Início do dia (h)</label>
-                      <input type="number" class="form-control" id="conf-agenda-start" min="0" max="23" />
+                      <label class="form-label small text-muted" for="conf-agenda-start">De</label>
+                      <select class="form-select" id="conf-agenda-start"></select>
                     </div>
                     <div class="col-6">
-                      <label class="form-label" for="conf-agenda-end">Fim do dia (h)</label>
-                      <input type="number" class="form-control" id="conf-agenda-end" min="1" max="24" />
+                      <label class="form-label small text-muted" for="conf-agenda-end">Até</label>
+                      <select class="form-select" id="conf-agenda-end"></select>
                     </div>
                     <div class="col-6">
-                      <label class="form-label" for="conf-agenda-slot">Slot (min)</label>
-                      <input type="number" class="form-control" id="conf-agenda-slot" min="5" max="240" />
+                      <label class="form-label small text-muted" for="conf-agenda-slot">Duração do horário</label>
+                      <select class="form-select" id="conf-agenda-slot">
+                        <option value="15">15 min</option>
+                        <option value="30">30 min</option>
+                        <option value="45">45 min</option>
+                        <option value="60">1 hora</option>
+                        <option value="90">1h30</option>
+                        <option value="120">2 horas</option>
+                      </select>
                     </div>
                     <div class="col-6">
-                      <label class="form-label" for="conf-agenda-horizon">Dias à frente</label>
-                      <input type="number" class="form-control" id="conf-agenda-horizon" min="1" max="90" />
+                      <label class="form-label small text-muted" for="conf-agenda-horizon">Dias à frente</label>
+                      <select class="form-select" id="conf-agenda-horizon">
+                        <option value="7">7 dias</option>
+                        <option value="14">14 dias</option>
+                        <option value="21">21 dias</option>
+                        <option value="30">30 dias</option>
+                        <option value="60">60 dias</option>
+                      </select>
                     </div>
                   </div>
+
+                  <div class="conf-resumo mt-3" id="conf-agenda-resumo"></div>
 
                   <button type="submit" class="btn btn-primary mt-3">Salvar horários</button>
                   <div class="alert inline-alert d-none mt-2 py-2" id="conf-agenda-status" role="status"></div>
@@ -682,15 +734,141 @@
     }
 
     // ---- Configurações (notificações + horários) ----
+    const NOMES_DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+    function opcoesHora(de, ate) {
+      let html = '';
+      for (let h = de; h <= ate; h++) html += `<option value="${h}">${String(h).padStart(2, '0')}:00</option>`;
+      return html;
+    }
+
+    function montarSemana() {
+      const cont = document.getElementById('conf-semana');
+      let html = '';
+      for (let d = 0; d < 7; d++) {
+        html += `
+          <div class="conf-dia" data-dia="${d}">
+            <div class="conf-dia-nome">${NOMES_DIAS[d]}</div>
+            <div class="form-check form-switch">
+              <input class="form-check-input conf-toggle" type="checkbox" id="conf-dia-${d}" />
+              <label class="form-check-label" for="conf-dia-${d}">trabalha</label>
+            </div>
+            <select class="conf-inicio" aria-label="início">${opcoesHora(0, 23)}</select>
+            <span class="conf-sep">às</span>
+            <select class="conf-fim" aria-label="fim">${opcoesHora(1, 24)}</select>
+          </div>`;
+      }
+      cont.innerHTML = html;
+      cont.addEventListener('change', atualizarResumo);
+    }
+
+    function parseWorkSchedule(str) {
+      const dias = Array.from({ length: 7 }, (_, i) => ({ dia: i, ativo: false, inicio: 9, fim: 18 }));
+      if (!str) return dias;
+      for (const parte of String(str).split(',')) {
+        const [diasStr, horasStr] = parte.trim().split(':');
+        if (!diasStr || !horasStr) continue;
+        const [inicio, fim] = horasStr.split('-').map((n) => parseInt(n, 10));
+        let listaDias = [];
+        if (diasStr.includes('-')) {
+          const [a, b] = diasStr.split('-').map((n) => parseInt(n, 10));
+          for (let d = a; d <= b; d++) listaDias.push(d);
+        } else {
+          listaDias.push(parseInt(diasStr, 10));
+        }
+        for (const d of listaDias) {
+          if (d < 0 || d > 6) continue;
+          dias[d].ativo = true;
+          if (Number.isFinite(inicio)) dias[d].inicio = inicio;
+          if (Number.isFinite(fim)) dias[d].fim = fim;
+        }
+      }
+      return dias;
+    }
+
+    function serializarSemana() {
+      const linhas = document.querySelectorAll('#conf-semana .conf-dia');
+      const dias = [];
+      for (const linha of linhas) {
+        dias.push({
+          dia: parseInt(linha.dataset.dia, 10),
+          ativo: linha.querySelector('.conf-toggle').checked,
+          inicio: parseInt(linha.querySelector('.conf-inicio').value, 10),
+          fim: parseInt(linha.querySelector('.conf-fim').value, 10),
+        });
+      }
+      const ativos = dias.filter((d) => d.ativo);
+      if (!ativos.length) return '';
+
+      const grupos = [];
+      let atual = null;
+      for (const d of ativos) {
+        if (atual && atual.inicio === d.inicio && atual.fim === d.fim && d.dia === atual.fimDia + 1) {
+          atual.fimDia = d.dia;
+        } else {
+          if (atual) grupos.push(atual);
+          atual = { inicio: d.inicio, fim: d.fim, iniDia: d.dia, fimDia: d.dia };
+        }
+      }
+      if (atual) grupos.push(atual);
+
+      return grupos
+        .map((g) => (g.iniDia === g.fimDia ? `${g.iniDia}` : `${g.iniDia}-${g.fimDia}`) + `:${g.inicio}-${g.fim}`)
+        .join(',');
+    }
+
+    function aplicarEstadoDia(linha) {
+      const ativo = linha.querySelector('.conf-toggle').checked;
+      linha.classList.toggle('off', !ativo);
+      linha.querySelector('.conf-inicio').disabled = !ativo;
+      linha.querySelector('.conf-fim').disabled = !ativo;
+    }
+
+    function atualizarResumo() {
+      document.querySelectorAll('#conf-semana .conf-dia').forEach(aplicarEstadoDia);
+      const str = serializarSemana();
+      const el = document.getElementById('conf-agenda-resumo');
+      el.innerHTML = str
+        ? 'Horários bloqueados (WORK_SCHEDULE): <code>' + str + '</code>'
+        : 'Nenhum dia marcado — o bot poderá agendar em todos os horários.';
+    }
+
+    function garantirOpcao(sel, valor, rotulo) {
+      if (valor === undefined || valor === null || valor === '') return;
+      if (![...sel.options].some((o) => o.value === String(valor))) {
+        const o = document.createElement('option');
+        o.value = String(valor);
+        o.textContent = rotulo;
+        sel.appendChild(o);
+      }
+    }
+
     function preencherConfiguracoes(c) {
       document.getElementById('conf-notif-whatsapp').value = c.notificacoes?.whatsapp ?? '';
       document.getElementById('conf-notif-email').value = c.notificacoes?.email ?? '';
-      document.getElementById('conf-agenda-work').value = c.agenda?.workSchedule ?? '';
-      document.getElementById('conf-agenda-start').value = c.agenda?.scheduleStart ?? 7;
-      document.getElementById('conf-agenda-end').value = c.agenda?.scheduleEnd ?? 24;
-      document.getElementById('conf-agenda-slot').value = c.agenda?.slotMinutes ?? 60;
-      document.getElementById('conf-agenda-horizon').value = c.agenda?.horizonDays ?? 14;
+
+      const dias = parseWorkSchedule(c.agenda?.workSchedule);
+      document.querySelectorAll('#conf-semana .conf-dia').forEach((linha) => {
+        const d = parseInt(linha.dataset.dia, 10);
+        linha.querySelector('.conf-toggle').checked = dias[d].ativo;
+        linha.querySelector('.conf-inicio').value = String(dias[d].inicio);
+        linha.querySelector('.conf-fim').value = String(dias[d].fim);
+      });
+
+      document.getElementById('conf-agenda-start').value = String(c.agenda?.scheduleStart ?? 7);
+      document.getElementById('conf-agenda-end').value = String(c.agenda?.scheduleEnd ?? 24);
+      garantirOpcao(document.getElementById('conf-agenda-slot'), c.agenda?.slotMinutes, `${c.agenda?.slotMinutes ?? 60} min`);
+      garantirOpcao(document.getElementById('conf-agenda-horizon'), c.agenda?.horizonDays, `${c.agenda?.horizonDays ?? 14} dias`);
+      document.getElementById('conf-agenda-slot').value = String(c.agenda?.slotMinutes ?? 60);
+      document.getElementById('conf-agenda-horizon').value = String(c.agenda?.horizonDays ?? 14);
+
+      atualizarResumo();
     }
+
+    // Inicializa os selects de janela e monta a grade semanal.
+    document.getElementById('conf-agenda-start').innerHTML = opcoesHora(0, 23);
+    document.getElementById('conf-agenda-end').innerHTML = opcoesHora(1, 24);
+    montarSemana();
 
     async function carregarConfiguracoes() {
       try {
@@ -724,7 +902,7 @@
       try {
         const { configuracoes } = await api('/api/configuracoes', 'PUT', {
           agenda: {
-            workSchedule: document.getElementById('conf-agenda-work').value.trim(),
+            workSchedule: serializarSemana(),
             scheduleStart: document.getElementById('conf-agenda-start').value,
             scheduleEnd: document.getElementById('conf-agenda-end').value,
             slotMinutes: document.getElementById('conf-agenda-slot').value,
