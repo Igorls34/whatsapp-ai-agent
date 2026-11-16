@@ -66,7 +66,7 @@ SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Sch
 
 - **`clientes`** — telefone (pk), nome, resumo (memória de longo prazo), timestamps, controle de bloqueio (`chat_fechado`, `motivo_bloqueio`…).
 - **`agenda`** — slots com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Slots livres passados são limpos automaticamente.
-- **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria**. O campo `preco` **não** é lido nem repassado — valores só saem com o responsável. Edite sem SQL pelo painel (`npm run admin`).
+- **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria**. O campo `preco` **não** é lido nem repassado — valores só saem com o responsável. Edite sem SQL pelo painel (`npm start` → `/admin`).
 - **`avisos_pendentes`** — caixa de saída (outbox) das notificações de WhatsApp: guarda `texto` + `destino`, sobrevive a restart e é drenada quando o socket conecta (ver [notificações](features/notificacoes.md)).
 
 ---
@@ -92,8 +92,9 @@ Veja o [`.env.example`](../.env.example) completo. Principais variáveis:
 | `IMAGENS_ATIVO` | `false` | Habilita envio de imagens/GIFs ao cliente. |
 | `WELCOME_IMAGE` / `WELCOME_TEXT` / `WELCOME_INACTIVE_HORAS` | — | Boas-vindas. |
 | `KEEP_MESSAGES` / `SUMMARIZE_EVERY` | `12` / `5` | Histórico volátil e frequência do resumo persistente. |
-| `ADMIN_PORT` / `ADMIN_TOKEN` | `3000` / vazio | Porta e token do painel admin (Bearer). |
-| `WEB_HOST` / `WEB_PORT` | `127.0.0.1` / `4000` | Onde fica o chat web (página + API). |
+| `HTTP_HOST` / `HTTP_PORT` | `127.0.0.1` / `4000` | Porta única do app: chat `/`, painel `/admin`, QR `/qr`, health `/health`. |
+| `ADMIN_TOKEN` | vazio | Se definido, exige `Authorization: Bearer <token>` no painel e nas APIs `/api/*`. |
+| `ADMIN_PORT` / `WEB_HOST` / `WEB_PORT` | `3000` / `127.0.0.1` / `4000` | **Só modos avulsos** (`npm run admin`, `npm run web`); ignorados pelo app único. |
 | `LLM_MAX_CONCURRENT` / `LLM_TIMEOUT_MS` | `3` / `60000` | Turnos de IA em paralelo e teto por turno. |
 | `ENVIO_MIN_GAP_MS` | `700` | Intervalo mínimo entre envios no WhatsApp (ms). |
 | `WEB_MAX_CONCURRENT` / `WEB_TIMEOUT_MS` | `3` / `60000` | Teto de respostas simultâneas e timeout no chat web. |
@@ -109,14 +110,15 @@ A identidade, o tom e as preferências da IA **não** ficam no `.env`: ficam em 
 | Comando | Ação |
 |---|---|
 | `npm run setup` | Wizard de configuração (identidade, agenda, notificações; instala o opencode) |
-| `npm start` | **Sobe tudo** (IA + bot + painel + web) com supervisor e auto-restart |
-| `npm run start:bot` | Só o bot (espera o `serve` estar no ar) |
+| `npm start` | **Sobe tudo** (`opencode serve` + app único) com supervisor e auto-restart |
+| `npm run start:bot` | Só o app (bot + HTTP unificado; espera o `serve` estar no ar) |
 | `npm run serve` | Sobe o opencode server (:4096) — outra janela |
-| `npm run dev` | Inicia o bot com watch |
-| `npm run admin` | Painel web (dashboard/serviços/agenda/clientes) em http://127.0.0.1:3000 |
-| `npm run web` | Chat web em http://127.0.0.1:4000 |
-| `npm run seed` | Gera horários livres na agenda (manual — o bot já auto-seeda) |
+| `npm run dev` | Inicia o app com watch |
+| `npm run admin` | Modo avulso: painel sozinho em http://127.0.0.1:3000 (dev) |
+| `npm run web` | Modo avulso: chat sozinho em http://127.0.0.1:4000 (dev) |
+| `npm run seed` | Gera horários livres na agenda (manual — o app já auto-seeda) |
 | `npm run test:llm` | Smoke test da IA local |
+| `npm test` | Testes unitários (`node:test`) |
 
 ---
 

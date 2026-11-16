@@ -81,7 +81,7 @@ Cada resposta enviada ao cliente é avaliada (manual ou automaticamente) contra 
 1. `npm run serve` (terminal A — opencode server)
 2. `npm start` (terminal B — bot)
 3. `npm run test:llm` (validação da IA + parser)
-4. Teste manual no WhatsApp ou no chat web (`npm run web` → http://127.0.0.1:4000)
+4. Teste manual no WhatsApp ou no chat web (`npm start` → http://127.0.0.1:4000)
 
 ---
 

@@ -22,10 +22,11 @@ Visitante (navegador)
 ## Rodar
 
 ```bash
-npm run web
+npm start
 # abra http://127.0.0.1:4000
 ```
 
+- O chat é servido pelo **app único** (mesma porta do painel e do QR); `npm run web` sobe só o chat, na `WEB_PORT`, para desenvolvimento.
 - Precisa do `opencode serve` no ar (`npm run serve`, outro terminal).
 - Quando o opencode cai, o chat responde com o aviso padrão do bot.
 
@@ -33,12 +34,13 @@ npm run web
 
 | Variável | Padrão | Descrição |
 |---|---|---|
-| `WEB_HOST` | `127.0.0.1` | Endereço para ouvir. `0.0.0.0` expõe na rede (para colocar no portfólio, prefira HTTPS à frente). |
-| `WEB_PORT` | `4000` | Porta do chat. |
+| `HTTP_HOST` | `127.0.0.1` | Endereço para ouvir. `0.0.0.0` expõe na rede (para colocar no portfólio, prefira HTTPS à frente). |
+| `HTTP_PORT` | `4000` | Porta única do app (chat em `/`, painel em `/admin`, QR em `/qr`). |
+| `WEB_HOST` / `WEB_PORT` | `127.0.0.1` / `4000` | Só no modo avulso (`npm run web`). |
 
 ## O que NÃO existe aqui (vs. WhatsApp)
 
-- **Ferramentas que dependem do WhatsApp** (`enviar_imagem`, notificações por WhatsApp, emergência via WhatsApp) respondem com aviso amigável ao modelo — o chat vira texto puro.
+- **Ferramentas que dependem do WhatsApp** (`enviar_imagem`) respondem com aviso amigável ao modelo — o chat vira texto puro. **Notificações** (agendamento/emergência) funcionam: vão para a outbox e saem quando o WhatsApp do app estiver conectado.
 - **Agendamentos**: funcionam normalmente (o Igor é notificado por email/WhatsApp, conforme config).
 - **Rate limit** por sessão: ~12 mensagens/minuto (`429`) — evita abuso em site público.
 - **Bloqueio por abuso**: comportamento abusivo chama a ferramenta `bloquear_cliente` e o chat fica **indisponível por 1h** (retorno `indisponivel: true`). Em tudo isso, os **gargalos** também valem aqui (ver [backpressure](backpressure.md)).
@@ -55,7 +57,8 @@ npm run web
 
 | Arquivo | Papel |
 |---|---|
-| `src/web/server.js` | Servidor HTTP + API + monta os mesmos componentes do bot |
+| `src/http/routes/chat.js` | Rotas do chat (página + API) montadas no app único |
+| `src/web/server.js` | Modo avulso do chat (dev, porta `WEB_PORT`) |
 | `src/web/index.html` | Página do chat (HTML/CSS/JS embutidos) |
 
 ## Embutir no portfólio

@@ -6,7 +6,7 @@ Deixa o responsável **personalizar a IA sem mexer em código** — o nome, o je
 
 ## Como editar (painel)
 
-1. Rode `npm run admin` (ou use o `npm start`, que já sobe o painel) e abra `http://127.0.0.1:3000`.
+1. Rode `npm start` e abra `http://127.0.0.1:4000/admin` (o modo avulso `npm run admin` também funciona, na `:3000`).
 2. Abra a aba **Persona**.
 3. Preencha os campos e clique em **Salvar persona**.
 

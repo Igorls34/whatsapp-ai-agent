@@ -1,0 +1,36 @@
+# Unit systemd de usuário — app único (bot + HTTP unificado).
+#
+# Instalação no servidor (como o usuário dono do app, sem sudo):
+#   mkdir -p ~/.config/systemd/user
+#   cp deploy/whatsapp-ai-agent.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now whatsapp-ai-agent
+#   loginctl enable-linger "$USER"     # mantém rodando após logout
+#
+# Ajuste `WorkingDirectory` se o app não estiver em ~/apps/whatsapp-ai-agent.
+#
+# IMPORTANTE: `start.js` sobe o `opencode serve` junto (se ainda não estiver no ar).
+# Se o opencode já roda como outra unit neste servidor, use:
+#   ExecStart=/usr/bin/env node src/index.js
+
+[Unit]
+Description=WhatsApp AI Agent (app unico: WhatsApp + HTTP)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/apps/whatsapp-ai-agent
+ExecStart=/usr/bin/env node start.js
+# `opencode` costuma ser instalado via npm global em ~/.npm-global/bin:
+Environment=PATH=%h/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+Restart=always
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=20
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

@@ -2,6 +2,19 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.6.0] — 2026-11-15
+
+### Adicionado
+- **`deploy/whatsapp-ai-agent.service`** — modelo da unit systemd de usuário do app único (`node start.js`, `Restart=always`, PATH com `~/.npm-global/bin`), com alternativa para servidores onde o `opencode serve` já roda como outra unit.
+- Seções de **deploy e healthcheck** no guia do operador (`/health`, `journalctl`, rollback).
+
+### Alterado
+- **`docs/OPERACAO.md` reescrito** para a topologia de app único: uma porta (`/`, `/admin`, `/qr`, `/health`), QR no terminal **e** em `/qr`, logs via `journalctl`, outbox nas notificações e modos avulsos marcados como dev.
+- **`README.md`** — tabela de componentes e “onde abrir cada coisa” apontam para a porta única; QR documentado em `/qr`.
+- **`docs/REFERENCIA.md`** — comandos (`npm start`/`start:bot`, avulsos) e configuração (`HTTP_HOST`/`HTTP_PORT`, `ADMIN_TOKEN`; `ADMIN_PORT`/`WEB_*` como legado).
+- Páginas de funcionalidades (`painel-admin`, `chat-web`, `persona`) e guias (`AJUSTES`, `AVALIACAO`) atualizados para `http://127.0.0.1:4000/...`.
+- Status do plano: fases 0–4 concluídas.
+
 ## [0.5.0] — 2026-11-15
 
 ### Adicionado

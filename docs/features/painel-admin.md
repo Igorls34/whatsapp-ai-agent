@@ -7,8 +7,8 @@ Página web simples para **gerenciar o catálogo de serviços** (`servicos`) no 
 ## Como usar
 
 ```bash
-npm run admin        # sobe o servidor HTTP local
-# abra http://127.0.0.1:3000 no navegador
+npm start            # sobe o app único (ou: npm run admin no modo avulso)
+# abra http://127.0.0.1:4000/admin no navegador
 ```
 
 - A página lista todos os serviços (inclusive inativos), com **toggle** de ativo na própria linha.
@@ -41,10 +41,10 @@ Exemplos:
 
 ```bash
 # listar
-curl http://127.0.0.1:3000/api/servicos
+curl http://127.0.0.1:4000/api/servicos
 
 # criar
-curl -X POST http://127.0.0.1:3000/api/servicos \
+curl -X POST http://127.0.0.1:4000/api/servicos \
   -H "Content-Type: application/json" \
   -d '{"nome":"Formatacao de PC","descricao":"Servico completo","ativo":true,"ordem":0}'
 ```
@@ -60,11 +60,12 @@ O catálogo é a **fonte da verdade** que o LLM usa para apresentar serviços (r
 
 ## Arquivos
 
-- `src/admin/server.js` — servidor HTTP (API + serve a página)
+- `src/http/routes/admin.js` — rotas do painel (API + página) montadas no app único em `/admin`
+- `src/admin/server.js` — modo avulso do painel (dev, porta `ADMIN_PORT`)
 - `src/admin/index.html` — interface (HTML + CSS + JS vanilla, sem framework)
 - `src/db/repositories.js` → métodos `listarServicosAdmin`, `criarServico`, `atualizarServico`, `excluirServico`
-- Config em `src/config.js` → `config.admin`
-- Script `npm run admin` em `package.json`
+- Config em `src/config.js` → `config.admin` (+ `config.http` para a porta única)
+- Scripts `npm start` (app único) e `npm run admin` (avulso) em `package.json`
 
 ## Pontos de atenção
 

@@ -70,28 +70,33 @@ Esse comando sobe **tudo ao mesmo tempo** e cuida de tudo sozinho:
 
 | Componente | O que é |
 |---|---|
-| 🤖 **Bot WhatsApp** | atende os clientes por mensagem no celular |
+| 🤖 **App (sistema único)** | **um processo** que atende no WhatsApp e serve todas as páginas web |
 | 🧠 **IA local** (opencode, `:4096`) | o modelo que gera as respostas |
-| 🖥️ **Painel admin** (`:3000`) | seu painel de gestão: dashboard, serviços, agenda e clientes |
-| 💬 **Chat web** (`:4000`) | conversa com o mesmo agente no navegador |
+| 🖥️ **Painel admin** (`/admin`) | seu painel de gestão: dashboard, serviços, agenda e clientes |
+| 💬 **Chat web** (`/`) | conversa com o mesmo agente no navegador |
+| 📷 **QR** (`/qr`) | pareamento do WhatsApp pelo navegador |
+
+As páginas ficam todas na **mesma porta** (`http://127.0.0.1:4000`): chat em `/`, painel em `/admin`, QR em `/qr` e health em `/health`.
 
 Mesmo se algum processo der problema, ele **religa sozinho**. Para desligar tudo, aperte `Ctrl`+`C`.
 
 ### Conecte o WhatsApp (só na primeira vez)
 
-No primeiro `npm start`, aparece um **QR Code** no terminal:
+No primeiro `npm start`, aparece um **QR Code** no terminal (e também em `http://127.0.0.1:4000/qr`):
 
 1. Abra o WhatsApp no celular do responsável (o Igor).
 2. Vá em **Ajustes → Aparelhos conectados → Conectar um aparelho**.
-3. Aponte a câmera para o QR Code do terminal.
+3. Aponte a câmera para o QR Code do terminal (ou da página `/qr`).
 
 Depois disso a sessão fica salva na pasta `.sessions` — **não precisa escanear de novo**. O bot atende sozinho 24/7. 📱
 
 ### Onde abrir cada coisa
 
-- **Painel admin** → `http://127.0.0.1:3000` (dashboard, serviços, agenda, clientes)
+- **Painel admin** → `http://127.0.0.1:4000/admin` (dashboard, serviços, agenda, clientes)
 - **Persona da IA** → aba **Persona** no painel: mude nome, jeito de falar e preferências, sem código
 - **Chat web** → `http://127.0.0.1:4000` (portfólio no navegador)
+- **Pareamento do WhatsApp** → `http://127.0.0.1:4000/qr`
+- **Healthcheck** → `http://127.0.0.1:4000/health`
 - **Origem do problema?** → veja os logs do próprio terminal (tabela logo abaixo)
 
 ## ✅ Como saber se está de pé
@@ -102,8 +107,7 @@ Fique de olho no terminal em que você rodou `npm start`:
 |---|---|
 | `[whatsapp] Conectado e pronto para atender 24/7.` | WhatsApp conectado 🟢 |
 | `[llm] opencode server OK` | IA no ar 🟢 |
-| `[admin] Painel de controle em http://127.0.0.1:3000` | Painel no ar 🟢 |
-| `[web] Chat disponível em http://127.0.0.1:4000` | Chat web no ar 🟢 |
+| `[app] Sistema no ar em http://127.0.0.1:4000` | App + páginas web no ar 🟢 |
 | `[seed] N horários livres gerados/atualizados.` | Agenda preenchida 🟢 |
 
 > Se a IA cair, o bot continua no WhatsApp mas responde "não consegui responder 😅" — o supervisor tenta relê-la sozinho.
