@@ -246,6 +246,24 @@
             <a class="btn btn-outline-primary btn-sm" href="/qr" target="_blank" rel="noopener">Abrir página de QR em outra aba</a>
           </div>
         </div>
+
+        <div class="card shadow-sm mt-4">
+          <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span>🎛️ Controles do agente</span>
+            <small>ações no processo do bot</small>
+          </div>
+          <div class="card-body">
+            <div class="alert inline-alert d-none mb-3 py-2" id="wa-ctrl-status" role="status"></div>
+            <div class="d-flex flex-wrap gap-2">
+              <button type="button" class="btn btn-outline-primary" id="btn-agente-reiniciar" title="Reinicia o serviço (mantém a sessão). A página volta em alguns segundos.">🔄 Reiniciar agente</button>
+              <button type="button" class="btn btn-outline-warning" id="btn-agente-reparear" title="Apaga a sessão atual e gera um QR novo (corrige falhas de sincronização).">📲 Re-parear WhatsApp</button>
+              <button type="button" class="btn btn-outline-danger" id="btn-agente-desligar" title="Para o serviço. Para religar, use SSH: systemctl --user start whatsapp-ai-agent">⏻ Desligar agente</button>
+            </div>
+            <p class="text-muted mb-0 mt-3" style="font-size:.78rem;">
+              Reiniciar/re-parear derrubam a página por alguns segundos (o serviço religa sozinho). <strong>Desligar</strong> deixa o bot parado até religar manualmente via SSH.
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- ============ ABA DASHBOARD ============ -->
@@ -732,6 +750,41 @@
       atualizarWhatsapp();
       waTimer = setInterval(atualizarWhatsapp, 3000);
     }
+
+    // ---- Controles do agente (reiniciar / re-parear / desligar) ----
+    const waCtrlStatus = document.getElementById('wa-ctrl-status');
+    function setCtrlStatus(msg, tipo) {
+      waCtrlStatus.classList.remove('d-none', 'alert-primary', 'alert-success', 'alert-danger');
+      if (tipo) waCtrlStatus.classList.add('alert-' + tipo);
+      waCtrlStatus.textContent = msg;
+    }
+
+    async function acaoAgente(acao, pergunta, desliga = false) {
+      if (pergunta && !confirm(pergunta)) return;
+      setCtrlStatus('Enviando…', 'primary');
+      try {
+        await api('/api/agente/' + acao, 'POST');
+        setCtrlStatus(
+          desliga
+            ? 'Agente desligado. Para religar: systemctl --user start whatsapp-ai-agent'
+            : 'Ação enviada — a página vai atualizar sozinha em instantes.',
+          'success'
+        );
+        if (!desliga) setTimeout(() => location.reload(), 6000);
+      } catch (err) {
+        setCtrlStatus('Falha: ' + err.message, 'danger');
+      }
+    }
+
+    document.getElementById('btn-agente-reiniciar').addEventListener('click', () =>
+      acaoAgente('reiniciar', 'Reiniciar o agente agora? A página fica fora por alguns segundos.')
+    );
+    document.getElementById('btn-agente-reparear').addEventListener('click', () =>
+      acaoAgente('reparear', 'Re-parear remove a sessão atual e pede um QR novo (corrige falhas de sincronização). Confirma?')
+    );
+    document.getElementById('btn-agente-desligar').addEventListener('click', () =>
+      acaoAgente('desligar', 'Desligar o agente? Ele só volta via SSH: systemctl --user start whatsapp-ai-agent', true)
+    );
 
     // ---- Configurações (notificações + horários) ----
     const NOMES_DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];

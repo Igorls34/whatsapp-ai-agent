@@ -2,6 +2,16 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.7.2] — 2026-11-16
+
+### Adicionado
+- **Controles do agente** na aba 📱 WhatsApp do painel:
+  - **Reiniciar agente** (`systemctl --user restart whatsapp-ai-agent`);
+  - **Re-parear WhatsApp** (move a sessão para backup e reinicia → gera QR novo, corrige falhas de sincronização);
+  - **Desligar agente** (`systemctl --user stop`).
+- Rotas `GET /api/agente/status` e `POST /api/agente/{reiniciar,desligar,reparear}` (guard admin).
+- Testes `test/agente.test.js`.
+
 ## [0.7.1] — 2026-11-16
 
 ### Alterado

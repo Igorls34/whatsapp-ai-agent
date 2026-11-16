@@ -57,13 +57,15 @@ npm run start:bot
 
 ## Conectar o WhatsApp (primeira vez ou sessão perdida)
 
-No start, o QR aparece **no terminal** e também em `http://127.0.0.1:4000/qr`.
+No start, o QR aparece **no terminal** e também em `http://127.0.0.1:4000/qr` (ou, no painel, na aba **📱 WhatsApp**).
 
 1. Abra o WhatsApp no celular do responsável.
 2. **Ajustes → Aparelhos conectados → Conectar um aparelho**.
 3. Aponte a câmera para o QR (terminal ou página `/qr`).
 
 A sessão fica salva em `.sessions/` — não precisa escanear de novo. Se o QR expirar, a página se atualiza sozinha (o código é gerado em memória; não existe mais servidor Python nem popup do Windows).
+
+> **Controles no painel** (aba 📱 WhatsApp): **Reiniciar agente**, **Re-parear WhatsApp** (gera QR novo) e **Desligar agente**. O "Desligar" para o serviço — para religar: `systemctl --user start whatsapp-ai-agent`.
 
 ## Parar
 

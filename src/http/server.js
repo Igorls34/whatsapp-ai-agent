@@ -14,6 +14,7 @@ import { registrarRotasChat } from './routes/chat.js';
 import { registrarRotasQr } from './routes/qr.js';
 import { registrarRotasHealth } from './routes/health.js';
 import { registrarRotasConfiguracoes } from './routes/configuracoes.js';
+import { registrarRotasAgente } from './routes/agente.js';
 
 export function criarRouterPadrao({ config, brain, repos, memory, webAgent, conversation, qrState, pagePathsAdmin, onAgendaAlterada }) {
   const router = createRouter({ guards: { admin: criarGuardAdmin(config.admin.token) } });
@@ -22,6 +23,7 @@ export function criarRouterPadrao({ config, brain, repos, memory, webAgent, conv
   registrarRotasQr(router, { qrState });
   registrarRotasHealth(router, { brain, qrState });
   registrarRotasConfiguracoes(router, { settings: brain.settings, onAgendaAlterada });
+  registrarRotasAgente(router, { config, qrState });
   return router;
 }
 
