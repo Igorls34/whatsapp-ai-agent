@@ -2,6 +2,11 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.7.3] — 2026-11-16
+
+### Corrigido
+- **Chamada ao LLM quebrada**: o app enviava `model` como string (`"opencode/big-pickle"`), mas o opencode ≥ 1.19 passou a exigir objeto `{ providerID, modelID }`. Adicionado `resolverModel()` no adapter, que converte o valor do `.env` (formato `provider/model`) para o objeto correto. Isso era o que fazia o bot responder sempre "Agora não consegui responder 😅".
+
 ## [0.7.2] — 2026-11-16
 
 ### Adicionado

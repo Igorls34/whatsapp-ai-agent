@@ -18,6 +18,17 @@ function base64(str) {
   return Buffer.from(str, 'utf8').toString('base64');
 }
 
+// Converte a especificação de modelo do .env para o formato que o opencode
+// (>= 1.19) espera: objeto { providerID, modelID }. Aceita "provider/model",
+// objeto já montado, ou null/undefined (usa o default do servidor).
+export function resolverModel(model) {
+  if (!model) return null;
+  if (typeof model !== 'string') return model;
+  const [providerID, ...resto] = model.split('/');
+  const modelID = resto.join('/');
+  return modelID ? { providerID, modelID } : null;
+}
+
 export function createLocalOpencodeAdapter(overrides = {}) {
   const { url, password, username, model } = {
     url: config.llm.opencode.url,
@@ -34,6 +45,9 @@ export function createLocalOpencodeAdapter(overrides = {}) {
   if (password) {
     headers.Authorization = `Basic ${base64(`${username}:${password}`)}`;
   }
+
+  // opencode >= 1.19 espera `model` como OBJETO { providerID, modelID } (não string).
+  const modelObj = resolverModel(model);
 
   // Mapa telefone -> sessão do opencode + fila para não sobrepor turnos do mesmo cliente.
   const sessions = new Map();
@@ -154,7 +168,7 @@ export function createLocalOpencodeAdapter(overrides = {}) {
               body: {
                 parts: [{ type: 'text', text }],
                 system,
-                ...(model ? { model } : {}),
+                ...(modelObj ? { model: modelObj } : {}),
               },
             });
             return extractReply(data.parts);
@@ -178,7 +192,7 @@ export function createLocalOpencodeAdapter(overrides = {}) {
             body: {
               parts: [{ type: 'text', text }],
               system,
-              ...(model ? { model } : {}),
+              ...(modelObj ? { model: modelObj } : {}),
             },
           });
           return extractReply(data.parts);
