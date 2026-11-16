@@ -4,7 +4,7 @@
 
 Plano para transformar o projeto de "vários processos remendados" em **um único sistema coerente** com a proposta do projeto: um assistente 24/7 **agnóstico de canal**, com um só cérebro, um só banco, um só servidor HTTP e uma operação enxuta.
 
-> Status: **Fases 0–2 concluídas** (v0.4.0) — sistema já roda com um cérebro e uma porta HTTP. Próxima: **Fase 3** (notificação em processo). Veja o [CHANGELOG](../CHANGELOG.md) para o histórico de releases.
+> Status: **Fases 0-3 concluídas** (v0.5.0) — sistema roda com um cérebro, uma porta HTTP e notificações em processo (outbox persistente). Próxima: **Fase 4** (operação/single service). Veja o [CHANGELOG](../CHANGELOG.md) para o histórico de releases.
 
 ---
 

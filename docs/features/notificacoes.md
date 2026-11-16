@@ -33,26 +33,33 @@ Verificação no log:
 
 Quando o cliente está irritado, com urgência ou pedindo explicitamente falar com um humano, o LLM aciona `emergencyService.js`:
 
-- Se `EMERGENCY_NUMBER` estiver preenchido → envia via WhatsApp para esse número;
+- Se `EMERGENCY_NUMBER` estiver preenchido → envia via WhatsApp para esse número (ou enfileira na outbox se o WhatsApp estiver desconectado);
 - Senão → registra no log com prefixo `[EMERGENCIA]`.
 
-## 3. Fila de avisos (`avisos_pendentes`)
+## 3. Caixa de saída (outbox) — `avisos_pendentes`
 
-Processos **sem socket do WhatsApp** (chat web, painel) não conseguem enviar notificação direto — eles **gravam na fila** `avisos_pendentes` (`dbEnqueue`) e o bot entrega depois:
+Toda notificação de WhatsApp passa pela **outbox** (`src/notifications/outbox.js`), que decide entrega imediata ou persistência:
 
-- O bot verifica a fila **a cada 30s** — cada aviso é tratado individualmente (um erro não bloqueia os demais).
-- Após **5 tentativas** sem sucesso o aviso é descartado (com log).
-- Detalhes completos em [backpressure.md](backpressure.md).
+- **WhatsApp conectado** → envia na hora (respeitando o intervalo mínimo entre envios).
+- **Sem socket ou falha de envio** → grava em `avisos_pendentes` **com o destinatário** (`destino`) e tenta de novo depois.
+- **Sem socket novo** (pareamento/reconexão) → o app dispara a drenagem **no evento de conexão**; **não há mais polling a cada 30s**.
+- Falhas com socket ativo usam **retry exponencial** (5s → … → 5min) e, após **5 tentativas**, o aviso é descartado com log.
+- A tabela continua existindo para o aviso **sobreviver a um restart**: no boot, ele sai assim que o WhatsApp conectar.
+
+No painel, `avisosPendentes` no dashboard e `notificacoes.pendentes` no `/health` mostram o tamanho da fila.
 
 ## Arquivos
 
-- `src/services/notificationService.js` — WhatsApp + email (nodemailer)
+- `src/notifications/outbox.js` — entrega imediata + fila persistente + retry
+- `src/services/notificationService.js` — WhatsApp (via outbox) + email (nodemailer)
 - `src/services/emergencyService.js` — `notificar_emergencia`
 - `src/services/toolExecutor.js` — deflagra `notificarAgendamento` pós-agendamento
-- `src/index.js` — `drenarAvisosPendentes` (entrega a fila a cada 30s)
+- `src/core/brain.js` — cria a outbox única e avisa ouvintes quando o socket conecta
+- `src/app.js` — drena a fila no evento de conexão (`brain.onSocket`)
 - Config em `src/config.js` → `config.notificacoes`
 
 ## Pontos de atenção
 
-- O bot usa a **mesma conexão WhatsApp** para enviar as notificações ao Igor — se o socket cair, só o email segue (e vice-versa o log em emergência).
+- O app usa a **mesma conexão WhatsApp** para enviar as notificações ao Igor. Se o socket cair, o aviso fica na outbox (persistido) e o email segue normalmente.
+- Como a outbox é única do processo, não existe mais diferença entre "notificação do bot" e "notificação do chat web" — as duas seguem o mesmo caminho.
 - Para testar o email sem agendar: ver "Como testar rápido" em [SMTP.md](../SMTP.md).

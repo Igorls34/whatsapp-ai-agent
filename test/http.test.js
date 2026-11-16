@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createRouter } from '../src/http/router.js';
 import { createQrState } from '../src/whatsapp/qrState.js';
 import { registrarRotasQr } from '../src/http/routes/qr.js';
+import { registrarRotasHealth } from '../src/http/routes/health.js';
 
 function fakeRes() {
   return {
@@ -118,4 +119,24 @@ test('GET /api/qr responde o estado atual do pareamento', async () => {
   const dadosDepois = JSON.parse(depois.body);
   assert.equal(dadosDepois.temQr, true);
   assert.equal(dadosDepois.conectado, false);
+});
+
+test('GET /health reporta a outbox de notificações pendentes', async () => {
+  const router = createRouter();
+  const brain = {
+    db: { prepare: () => ({ get: () => ({ ok: 1 }) }) },
+    adapter: { health: async () => ({ version: '0.0.0-test' }) },
+    repos: { contarAvisosPendentes: () => 3 },
+  };
+  const qrState = createQrState();
+  qrState.conectar();
+  registrarRotasHealth(router, { brain, qrState });
+
+  const res = fakeRes();
+  await router.handle(fakeReq('GET', '/health'), res);
+  const dados = JSON.parse(res.body);
+  assert.equal(res.status, 200);
+  assert.equal(dados.ok, true);
+  assert.equal(dados.whatsapp.conectado, true);
+  assert.deepEqual(dados.notificacoes, { pendentes: 3 });
 });

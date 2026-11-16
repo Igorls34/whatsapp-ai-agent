@@ -37,12 +37,15 @@ CREATE INDEX IF NOT EXISTS idx_agenda_status ON agenda (status, data_hora);
 CREATE INDEX IF NOT EXISTS idx_agenda_cliente ON agenda (cliente_telefone);
 
 -- ============================================================================
--- Avisos pendentes (fila) — escritos por processos sem WhatsApp (chat web,
--- painel) e entregues pelo bot, que tem o socket. Ex.: agendamento novo.
+-- Avisos pendentes (caixa de saída) — notificações que não puderam ser
+-- entregues na hora (socket do WhatsApp indisponível ou envio com falha).
+-- Persistem para sobreviver a restart e são drenadas assim que o socket conecta.
+-- destino = telefone do destinatário (NULL = NOTIF_WHATSAPP do .env).
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS avisos_pendentes (
   id        INTEGER PRIMARY KEY AUTOINCREMENT,
   texto     TEXT NOT NULL,
+  destino   TEXT,
   criado_em TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
 

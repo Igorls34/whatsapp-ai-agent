@@ -2,6 +2,24 @@
 
 Todas as mudanças relevantes do projeto, em ordem cronológica (da mais recente para a mais antiga). Formato inspirado no [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/) e versionado com [SemVer](https://semver.org/lang/pt-BR/).
 
+## [0.5.0] — 2026-11-15
+
+### Adicionado
+- **`src/notifications/outbox.js`** — caixa de saída única do processo: envia na hora quando o WhatsApp está conectado e, sem socket (ou com falha), persiste o aviso em `avisos_pendentes` para entrega posterior.
+- Coluna **`destino`** em `avisos_pendentes` (migração automática para bancos antigos) — permite avisar números diferentes (agendamento e emergência).
+- Repositórios `contarAvisosPendentes`/`listarAvisosPendentes(limite)` e `enfileirarAviso(texto, destino)`.
+- Drenagem da outbox **no evento de conexão** do WhatsApp (`brain.onSocket`), com retry exponencial (5s → 5min, máx. 5 tentativas).
+- `/health` reporta `notificacoes.pendentes` (tamanho da outbox).
+- Testes `test/outbox.test.js` e `test/migrations.test.js`.
+
+### Alterado
+- `notificationService` e `emergencyService` passam a usar a outbox — a emergência deixou de ser só log quando o WhatsApp está fora.
+- `createBrain()` cria o `pacer` e a `outbox` compartilhados e expõe `onSocket()`; canais recebem `outbox` em vez de `dbEnqueue`.
+- Fim do polling de 30s da fila de avisos em `src/app.js`.
+
+### Removido
+- `dbEnqueue` como parâmetro dos canais/serviços (substituído pela outbox).
+
 ## [0.4.0] — 2026-11-15
 
 ### Adicionado

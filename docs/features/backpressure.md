@@ -29,13 +29,14 @@ O código vive em `src/services/backpressure.js` (utilidades) e `src/index.js` +
 - Evita rajadas que o transporte (Baileys/WhatsApp) pode derrubar ou filtrar como spam.
 - A fila "nunca quebra": o erro de um envio é propagado a quem chamou, mas não impede os próximos.
 
-### 4. Fila de avisos à prova de travamento (`avisos_pendentes`)
+### 4. Caixa de saída de notificações (`avisos_pendentes`)
 
-Processos que **não têm socket do WhatsApp** (chat web, painel) não enviam notificações direto — gravam na tabela `avisos_pendentes` e o bot entrega:
+Toda notificação de WhatsApp passa pela **outbox** (`src/notifications/outbox.js`, criada pelo `brain`):
 
-- O bot verifica **a cada 30s** (`src/index.js` → `drenarAvisosPendentes`).
+- **Com socket** → envia na hora, respeitando o pacer.
+- **Sem socket ou falha** → grava na tabela `avisos_pendentes` (com o `destino`) e o app **drena no evento de conexão** — sem polling.
 - Itens são **tratados individualmente**: erro em um não bloqueia os demais (sem "cabeça-de-linha").
-- Após **5 tentativas** sem sucesso o aviso é **descartado** (com log), evitando mensagem eternamente presa.
+- Falhas com socket usam **retry exponencial** (5s → 5min) e após **5 tentativas** o aviso é **descartado** (com log), evitando mensagem eternamente presa.
 
 ### 5. Podas de sessões (memória do opencode)
 
@@ -84,12 +85,14 @@ Persistência em `clientes`: `chat_fechado`, `motivo_bloqueio`, `bloqueado_em`, 
 | Arquivo | Papel |
 |---|---|
 | `src/services/backpressure.js` | `createSemaphore`, `createSendPacer`, `withTimeout` |
-| `src/index.js` | Semáforo + pacer do bot, drain da fila de avisos (30s/5 tentativas) |
+| `src/index.js` | Sobe o app único (`criarAplicacao`) |
+| `src/app.js` | Semáforo/pacer compartilhados + drenagem da outbox no evento de conexão |
+| `src/notifications/outbox.js` | Envio imediato, persistência em `avisos_pendentes` e retry exponencial |
 | `src/llm/localOpencodeAdapter.js` | Semáforo global, timeout, poda de sessões |
-| `src/web/server.js` | Teto de concorrência + timeout do web (503), bloqueio temporário |
+| `src/web/server.js` | Modo avulso do chat (teto de concorrência + timeout, bloqueio temporário) |
 | `src/whatsapp/messageHandler.js` | Ignora mensagens de números bloqueados |
 | `src/services/toolExecutor.js` | Execução da ferramenta `bloquear_cliente` (canal define 1h vs permanente) |
-| `src/db/repositories.js` | `fecharChat`, `estadoChat`, `listarAvisosPendentes`, `removerAviso` |
+| `src/db/repositories.js` | `fecharChat`, `estadoChat`, `listarAvisosPendentes`, `contarAvisosPendentes`, `removerAviso` |
 
 ## Pontos de atenção
 

@@ -59,6 +59,15 @@ function migrarBloqueioChat(db) {
   add('desbloqueio_em', 'TEXT');
 }
 
+// Destinatário na caixa de saída: permite enfileirar avisos para números
+// diferentes (notificações de agendamento e emergência).
+function migrarAvisosDestino(db) {
+  const colunas = db.prepare('PRAGMA table_info(avisos_pendentes)').all();
+  if (!colunas.some((c) => c.name === 'destino')) {
+    db.exec(`ALTER TABLE avisos_pendentes ADD COLUMN destino TEXT`);
+  }
+}
+
 export function openDatabase(dbPath = config.dbPath) {
   fs.mkdirSync(path.dirname(dbPath), { recursive: true });
   const db = new Database(dbPath);
@@ -67,5 +76,6 @@ export function openDatabase(dbPath = config.dbPath) {
   db.exec(SCHEMA);
   migrarCategoriaServicos(db);
   migrarBloqueioChat(db);
+  migrarAvisosDestino(db);
   return db;
 }

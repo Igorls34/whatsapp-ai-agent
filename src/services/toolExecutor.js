@@ -9,13 +9,13 @@ import { createNotificationService } from './notificationService.js';
 // Qualquer erro/indisponibilidade do banco é convertido em JSON estruturado
 // para o LLM conseguir responder com elegância (edge case "DB offline").
 // canal: 'whatsapp' (padrão) | 'web' — define o comportamento do bloqueio de chat.
-export function createToolExecutor({ repos, getSocket, config, dbEnqueue, canal = 'whatsapp' }) {
+export function createToolExecutor({ repos, getSocket, config, outbox, canal = 'whatsapp' }) {
   const availability = createAvailabilityService(repos);
   const scheduling = createSchedulingService(repos);
   const clientMemory = createClientMemoryService(repos);
-  const emergency = createEmergencyService({ getSocket, config });
+  const emergency = createEmergencyService({ config, outbox });
   const images = createImageService({ getSocket, config });
-  const notifications = createNotificationService({ getSocket, config, dbEnqueue });
+  const notifications = createNotificationService({ config, outbox });
 
   // Bloqueio por abuso: WhatsApp é permanente; chat web temporário (1h).
   function bloquearCliente(args) {

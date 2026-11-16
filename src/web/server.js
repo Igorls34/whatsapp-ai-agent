@@ -12,10 +12,7 @@ import { registrarRotasChat } from '../http/routes/chat.js';
 const brain = createBrain({ config });
 const conversation = createConversationService({ brain, config });
 const repos = brain.repos;
-const { agent } = brain.createChannel({
-  canal: 'web',
-  dbEnqueue: (texto) => repos.enfileirarAviso(texto),
-});
+const { agent } = brain.createChannel({ canal: 'web' });
 
 const router = createRouter();
 registrarRotasChat(router, { config, repos, memory: brain.memory, webAgent: agent, conversation });

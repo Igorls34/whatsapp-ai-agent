@@ -67,7 +67,7 @@ SQLite via `better-sqlite3` (zero infra), caminho padrão `./data/agent.db`. Sch
 - **`clientes`** — telefone (pk), nome, resumo (memória de longo prazo), timestamps, controle de bloqueio (`chat_fechado`, `motivo_bloqueio`…).
 - **`agenda`** — slots com `status`: `livre` → `agendado` → `confirmada`/`cancelada`. Slots livres passados são limpos automaticamente.
 - **`servicos`** — catálogo editável (nome, descricao, **categoria**, ativo, ordem). O catálogo é apresentado ao bot **organizado por categoria**. O campo `preco` **não** é lido nem repassado — valores só saem com o responsável. Edite sem SQL pelo painel (`npm run admin`).
-- **`avisos_pendentes`** — fila de notificações de processos sem WhatsApp (web/painel) → entregues pelo bot (ver [backpressure](features/backpressure.md)).
+- **`avisos_pendentes`** — caixa de saída (outbox) das notificações de WhatsApp: guarda `texto` + `destino`, sobrevive a restart e é drenada quando o socket conecta (ver [notificações](features/notificacoes.md)).
 
 ---
 

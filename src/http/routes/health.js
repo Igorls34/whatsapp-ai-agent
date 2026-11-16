@@ -40,6 +40,13 @@ export function registrarRotasHealth(router, { brain, qrState }) {
 
     const { conectado, qr } = qrState.estado();
 
+    let avisosPendentes = null;
+    try {
+      avisosPendentes = brain.repos.contarAvisosPendentes();
+    } catch (err) {
+      /* já reportado em db.erro */
+    }
+
     return json(
       res,
       dbOk ? 200 : 503,
@@ -49,6 +56,7 @@ export function registrarRotasHealth(router, { brain, qrState }) {
         db: { ok: dbOk, erro: dbErro },
         llm,
         whatsapp: { conectado, qrPendente: Boolean(qr) },
+        notificacoes: { pendentes: avisosPendentes },
       }
     );
   });

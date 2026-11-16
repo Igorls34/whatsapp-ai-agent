@@ -2,7 +2,11 @@ import nodemailer from 'nodemailer';
 
 // Serviço de notificações: envia alertas pro Igor via WhatsApp e email
 // quando um agendamento é realizado (no bot ou no chat web).
-export function createNotificationService({ getSocket, config, dbEnqueue }) {
+//
+// A entrega no WhatsApp passa pela outbox (src/notifications/outbox.js): envia
+// na hora quando o socket está disponível e, se não estiver, persiste o aviso
+// para entrega assim que o WhatsApp conectar — sem polling entre processos.
+export function createNotificationService({ config, outbox }) {
   const { notificacoes } = config;
 
   // Transporter do nodemailer (Gmail SMTP por padrão)
@@ -16,30 +20,9 @@ export function createNotificationService({ getSocket, config, dbEnqueue }) {
     return transporter;
   }
 
-  // Processos sem socket (chat web) não conseguem enviar WhatsApp direto:
-  // gravam o aviso na fila (avisos_pendentes) e o bot entrega depois.
-  async function enviarWhatsApp(telefone, texto) {
-    if (!telefone) return { ok: false, motivo: 'whatsapp_indisponivel' };
-    const socket = getSocket();
-    if (!socket) {
-      if (dbEnqueue) {
-        try {
-          dbEnqueue(texto);
-          console.log('[notif] WhatsApp indisponivel -> aviso enfileirado p/ bot');
-          return { ok: true, motivo: 'enfileirado' };
-        } catch (err) {
-          console.error('[notif] falha ao enfileirar aviso:', err.message);
-        }
-      }
-      return { ok: false, motivo: 'whatsapp_indisponivel' };
-    }
-    try {
-      await socket.sendMessage(`${telefone}@s.whatsapp.net`, { text: texto });
-      return { ok: true };
-    } catch (err) {
-      console.error('[notif] falha WhatsApp:', err.message);
-      return { ok: false, motivo: err.message };
-    }
+  async function enviarWhatsApp(texto) {
+    if (!notificacoes.whatsapp) return { ok: false, motivo: 'whatsapp_indisponivel' };
+    return outbox.enviar({ telefone: notificacoes.whatsapp, texto });
   }
 
   async function enviarEmail(assunto, texto) {
@@ -65,7 +48,7 @@ export function createNotificationService({ getSocket, config, dbEnqueue }) {
       const textoWhatsApp = `📅 *Novo agendamento*\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
       const textoEmail = `Novo agendamento realizado.\n\nCliente: ${cliente}\nHorário: ${data_hora}${motivo ? `\nMotivo: ${motivo}` : ''}`;
 
-      const whatsapp = await enviarWhatsApp(notificacoes.whatsapp, textoWhatsApp);
+      const whatsapp = await enviarWhatsApp(textoWhatsApp);
       const email = await enviarEmail(`📅 Novo agendamento - ${data_hora}`, textoEmail);
 
       console.log(`[notif] agendamento ${data_hora}: WhatsApp=${whatsapp.ok} | Email=${email.ok}`);
@@ -74,7 +57,7 @@ export function createNotificationService({ getSocket, config, dbEnqueue }) {
 
     // Atalho genérico (emergências, etc.)
     async notificarWhatsApp(texto) {
-      return enviarWhatsApp(notificacoes.whatsapp, texto);
+      return enviarWhatsApp(texto);
     },
   };
 }

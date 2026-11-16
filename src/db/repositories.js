@@ -147,15 +147,17 @@ export function createRepositories(db) {
 
     excluirServico: db.prepare(`DELETE FROM servicos WHERE id = ?`),
 
-    // --- Fila de avisos pendentes (web/outros processos -> bot) ---
+    // --- Caixa de saída de notificações (outbox) ---
 
     listarAvisosPendentes: db.prepare(`
-      SELECT id, texto, criado_em FROM avisos_pendentes ORDER BY id LIMIT 25
+      SELECT id, texto, destino, criado_em FROM avisos_pendentes ORDER BY id LIMIT @limite
     `),
 
     enfileirarAviso: db.prepare(
-      `INSERT INTO avisos_pendentes (texto) VALUES (?)`
+      `INSERT INTO avisos_pendentes (texto, destino) VALUES (@texto, @destino)`
     ),
+
+    contarAvisosPendentes: db.prepare(`SELECT COUNT(*) AS total FROM avisos_pendentes`),
 
     removerAviso: db.prepare(`DELETE FROM avisos_pendentes WHERE id = ?`),
 
@@ -347,14 +349,18 @@ export function createRepositories(db) {
       return stmts.excluirServico.run(id).changes > 0;
     },
 
-    // --- Fila de avisos pendentes ---
+    // --- Caixa de saída de notificações ---
 
-    listarAvisosPendentes() {
-      return stmts.listarAvisosPendentes.all();
+    listarAvisosPendentes(limite = 25) {
+      return stmts.listarAvisosPendentes.all({ limite });
     },
 
-    enfileirarAviso(texto) {
-      stmts.enfileirarAviso.run(texto);
+    enfileirarAviso(texto, destino = null) {
+      stmts.enfileirarAviso.run({ texto: String(texto), destino });
+    },
+
+    contarAvisosPendentes() {
+      return stmts.contarAvisosPendentes.get().total;
     },
 
     removerAviso(id) {
