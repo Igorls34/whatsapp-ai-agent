@@ -172,6 +172,9 @@
 
     <ul class="nav nav-tabs mb-4" role="tablist">
       <li class="nav-item" role="presentation">
+        <a class="nav-link" id="tab-btn-whatsapp" href="#/whatsapp">📱 WhatsApp</a>
+      </li>
+      <li class="nav-item" role="presentation">
         <a class="nav-link active" id="tab-btn-dashboard" href="#/dashboard">Dashboard</a>
       </li>
       <li class="nav-item" role="presentation">
@@ -189,6 +192,26 @@
     </ul>
 
     <div class="tab-content">
+
+      <!-- ============ ABA WHATSAPP (pareamento) ============ -->
+      <div class="tab-pane" id="tab-whatsapp" role="tabpanel">
+        <div class="alert alert-primary d-flex align-items-center gap-2 inline-alert py-2" role="alert">
+          <span>📱</span>
+          <span>Para o bot atender, o WhatsApp precisa estar conectado. Escaneie o QR abaixo com o celular do Igor (<strong>Ajustes → Aparelhos conectados → Conectar um aparelho</strong>).</span>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span>Status da conexão</span>
+            <span class="badge" id="wa-badge">consultando…</span>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center gap-3 py-4">
+            <img id="wa-qr" alt="QR Code (aguardando…)" src="" style="display:none;width:280px;height:280px;background:#fff;padding:8px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.5);" />
+            <p id="wa-status" class="mb-0 text-muted" style="font-size:.85rem;">Consultando o estado do WhatsApp…</p>
+            <a class="btn btn-outline-primary btn-sm" href="/qr" target="_blank" rel="noopener">Abrir página de QR em outra aba</a>
+          </div>
+        </div>
+      </div>
 
       <!-- ============ ABA DASHBOARD ============ -->
       <div class="tab-pane show active" id="tab-dashboard" role="tabpanel">
@@ -508,9 +531,10 @@
     let agendaCarregado = false;
     let clientesCarregado = false;
     let personaCarregada = false;
+    let whatsappCarregado = false;
 
     function rotear() {
-      const rotas = { '#/dashboard': 'tab-dashboard', '#/servicos': 'tab-servicos', '#/agenda': 'tab-agenda', '#/clientes': 'tab-clientes', '#/persona': 'tab-persona' };
+      const rotas = { '#/dashboard': 'tab-dashboard', '#/servicos': 'tab-servicos', '#/agenda': 'tab-agenda', '#/clientes': 'tab-clientes', '#/persona': 'tab-persona', '#/whatsapp': 'tab-whatsapp' };
       const hash = rotas[location.hash] ? location.hash : '#/dashboard';
       const id = rotas[hash];
       document.querySelectorAll('.nav-tabs .nav-link').forEach((b) =>
@@ -532,10 +556,53 @@
         personaCarregada = true;
         carregarPersonaForm();
       }
+      if (id === 'tab-whatsapp' && !whatsappCarregado) {
+        whatsappCarregado = true;
+        carregarWhatsapp();
+      }
       if (id === 'tab-dashboard') carregarDashboard();
       window.scrollTo(0, 0);
     }
     window.addEventListener('hashchange', rotear);
+
+    // ---- Pareamento do WhatsApp (QR na aba /whatsapp) ----
+    let waTimer = null;
+    function carregarWhatsapp() {
+      const img = document.getElementById('wa-qr');
+      const status = document.getElementById('wa-status');
+      const badge = document.getElementById('wa-badge');
+
+      async function atualizarWhatsapp() {
+        try {
+          const res = await fetch('/api/qr', { cache: 'no-store' });
+          const d = await res.json();
+          if (d.conectado) {
+            img.style.display = 'none';
+            badge.textContent = 'Conectado ✅';
+            badge.className = 'badge bg-success';
+            status.textContent = 'WhatsApp conectado — o bot já atende.';
+            return;
+          }
+          badge.className = 'badge bg-warning text-dark';
+          if (d.temQr) {
+            img.style.display = 'block';
+            img.src = '/qr.png?t=' + Date.now();
+            badge.textContent = 'QR disponível';
+            status.textContent = 'Escaneie o QR com o WhatsApp do Igor — atualiza sozinho.';
+          } else {
+            img.style.display = 'none';
+            badge.textContent = 'Aguardando QR';
+            status.textContent = 'Aguardando o WhatsApp gerar o QR…';
+          }
+        } catch (err) {
+          badge.className = 'badge bg-secondary';
+          status.textContent = 'Não consegui consultar o status. Tentando de novo…';
+        }
+      }
+
+      atualizarWhatsapp();
+      waTimer = setInterval(atualizarWhatsapp, 3000);
+    }
 
     // ---- Helpers ----
     const esc = (s) =>
